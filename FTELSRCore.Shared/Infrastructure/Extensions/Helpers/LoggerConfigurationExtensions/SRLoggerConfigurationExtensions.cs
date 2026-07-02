@@ -1,6 +1,5 @@
-﻿// Ignore Spelling: sasl Username ssl
-
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
+using FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtensions.SRKafkaSinks;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
@@ -9,7 +8,9 @@ using Serilog.Sinks.PeriodicBatching;
 
 namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtensions
 {
-    public static class SRLoggerConfigurationExtensions
+    #region :::::::::::::::::::: SRKafkaSink ::::::::::::::::::::
+
+    public static partial class SRLoggerConfigurationExtensions
     {
         public static LoggerConfiguration SRKafkaSink(this LoggerSinkConfiguration loggerConfiguration,
                                                       int period = 5,
@@ -69,4 +70,44 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
             return loggerConfiguration.Sink(logEventSink);
         }
     }
+
+    #endregion :::::::::::::::::::: SRKafkaSink ::::::::::::::::::::
+
+    #region :::::::::::::::::::: SRKafkaSink ::::::::::::::::::::
+
+    public static partial class SRLoggerConfigurationExtensions
+    {
+        public static LoggerConfiguration TenantSRKafkaSinks(
+            this LoggerSinkConfiguration loggerConfiguration,
+            List<TenantSRKafkaSinkModel> kafkaSinkModels,
+            ITextFormatter formatter = null,
+            int period = 5, int batchSizeLimit = 50)
+        {
+            return loggerConfiguration.TenantSRKafkas(period: period,
+                                                      formatter: formatter,
+                                                      batchSizeLimit: batchSizeLimit,
+                                                      kafkaSinkModels: kafkaSinkModels);
+        }
+
+        private static LoggerConfiguration TenantSRKafkas(
+            this LoggerSinkConfiguration loggerConfiguration,
+            List<TenantSRKafkaSinkModel> kafkaSinkModels,
+            ITextFormatter formatter = null,
+            int period = 5, int batchSizeLimit = 50)
+        {
+            TenantSRKafkaSinkExtensions batchedSink = new(kafkaSinkModels, formatter);
+
+            PeriodicBatchingSink logEventSink = new(
+                batchedSink: batchedSink,
+                options: new PeriodicBatchingSinkOptions
+                {
+                    BatchSizeLimit = batchSizeLimit,
+                    Period = TimeSpan.FromSeconds(period)
+                });
+
+            return loggerConfiguration.Sink(logEventSink);
+        }
+    }
+
+    #endregion :::::::::::::::::::: SRKafkaSink ::::::::::::::::::::
 }

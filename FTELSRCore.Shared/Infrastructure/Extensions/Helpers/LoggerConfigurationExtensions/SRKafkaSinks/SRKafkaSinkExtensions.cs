@@ -1,6 +1,4 @@
-﻿// Ignore Spelling: Username sasl ssl
-
-using Confluent.Kafka;
+﻿using Confluent.Kafka;
 using Serilog.Events;
 using Serilog.Formatting;
 using Serilog.Formatting.Json;
@@ -9,7 +7,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 
-namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtensions
+namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtensions.SRKafkaSinks
 {
     public sealed record SRKafkaSinkExtensions : IBatchedLogEventSink
     {

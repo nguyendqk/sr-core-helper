@@ -62,5 +62,18 @@
         {
             Console.WriteLine($"{Environment.NewLine}[ERR] [LOGCONSOLE] [{DateTimeUtc():dd-MM-yyyy HH:mm:ss.fff}] [{className}] [{methodName}] -- note : {description} {Environment.NewLine}-- Message: {exception.Message?.Trim()} {Environment.NewLine}-- StackTrace: {exception.StackTrace?.Trim()} {Environment.NewLine} ");
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="className"></param>
+        /// <param name="methodName"></param>
+        /// <param name="description"></param>
+        /// 
+        public static void ConfigLoggerInformationByConsole(
+           string className, string methodName, string description)
+        {
+            Console.WriteLine($"{Environment.NewLine}[INF] [LOGCONSOLE] [{DateTimeUtc():dd-MM-yyyy HH:mm:ss.fff}] [{className}] [{methodName}] -- note : {description} {Environment.NewLine} ");
+        }
     }
 }
