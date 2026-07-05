@@ -66,7 +66,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
 
                         message = new Message<string, byte[]>
                         {
-                            Key = ((int)item.Level).ToString(),
+                            Key = null,
                             Value = Encoding.UTF8.GetBytes(stringWriter.ToString())
                         };
                     }

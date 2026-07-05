@@ -16,17 +16,49 @@ namespace FTELSRCore.Helpers
         /// <param name="obj">Đối tượng cần chuyển sang chuỗi JSON.</param>
         /// <returns>Chuỗi JSON biểu diễn đối tượng, hoặc chuỗi rỗng nếu đối tượng là null.</returns>
         ///
-        public static string ToJSon<T>(this T obj)
+        public static string ToJSon<T>(this T obj, ILogger logger = null)
         {
             if (obj is null) return string.Empty;
 
-            return obj switch
+            try
             {
-                BsonValue bsonValue => bsonValue.ToJson(),
+                return obj switch
+                {
+                    BsonValue bsonValue => bsonValue.ToJson(),
 
-                _ => JsonSerializer.Serialize(
-                    value: obj, options: _defaultJsonOptions)
-            };
+                    _ => JsonSerializer.Serialize(
+                        value: obj, options: _defaultJsonOptions)
+                };
+            }
+            catch (NotSupportedException)
+            {
+                return Newtonsoft.Json.JsonConvert.SerializeObject(obj);
+            }
+            catch (Exception exception)
+            {
+                string message =
+                    $"ToJSon to {typeof(T).Name} fail: " + Newtonsoft.Json.JsonConvert.SerializeObject(obj);
+
+                switch (logger)
+                {
+                    case not null:
+                        {
+                            logger.ErrorException(
+                                className: nameof(JSonParseHelpers), methodName: nameof(ToJSon), message: message, e: exception);
+
+                            break;
+                        }
+                    default:
+                        {
+                            CommonBaseConstant.ConfigLoggerExceptionByConsole(
+                                className: nameof(JSonParseHelpers), methodName: nameof(ToJSon), description: message, exception: exception);
+
+                            break;
+                        }
+                }
+            }
+
+            return string.Empty;
         }
 
         /// <summary>

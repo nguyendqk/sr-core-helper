@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using FTELSRCore.Data.SQL.Dapper.Helpers;
+using Microsoft.Data.SqlClient;
 using System.Data;
 
 namespace FTELSRCore.Data.SQL.Dapper
@@ -12,42 +13,56 @@ namespace FTELSRCore.Data.SQL.Dapper
 
         protected abstract DynamicParameters GetDynamicParameters(TClass entry);
 
-        public Task<IEnumerable<TResult>> Execute<TResult>(TClass pParams, CancellationToken cancellationToken)
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="pParams"></param>
+        /// <param name="commandTimeout"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        ///
+        public async Task<IEnumerable<TResult>> Execute<TResult>(
+            TClass pParams, int commandTimeout = 30, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using IDbConnection connection =
+            await using SqlConnection connection =
                 ConfigurationHelpers.CreateConnection(connectionString);
 
             DynamicParameters parameters = GetDynamicParameters(pParams);
 
-            IEnumerable<TResult> result =
-                connection.Query<TResult>(
-                    sql: StoreName,
-                    param: parameters,
-                    commandType: CommandType.StoredProcedure);
-
-            return Task.FromResult(result);
+            return await connection.QueryAsync<TResult>(
+                    new CommandDefinition(
+                        commandText: StoreName,
+                        parameters: parameters,
+                        commandTimeout: commandTimeout,
+                        commandType: CommandType.StoredProcedure,
+                        cancellationToken: cancellationToken)).ConfigureAwait(false);
         }
 
-        public Task<TResult> ExecuteScalar<TResult>(TClass pParams, CancellationToken cancellationToken)
+        public async Task<TResult> ExecuteScalar<TResult>(
+            TClass pParams, int commandTimeout = 30, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using IDbConnection connection =
+            await using SqlConnection connection =
                 ConfigurationHelpers.CreateConnection(connectionString);
 
             DynamicParameters parameters = GetDynamicParameters(pParams);
 
             IEnumerable<TResult> data =
-                connection.Query<TResult>(
-                    sql: StoreName,
-                    param: parameters,
-                    commandType: CommandType.StoredProcedure);
+                await connection.QueryAsync<TResult>(
+                    new CommandDefinition(
+                        commandText: StoreName,
+                        parameters: parameters,
+                        commandTimeout: commandTimeout,
+                        commandType: CommandType.StoredProcedure,
+                        cancellationToken: cancellationToken)).ConfigureAwait(false);
 
             TResult result = parameters.Get<TResult>("P_RESULT");
 
-            return Task.FromResult(result is null ? data.FirstOrDefault() : result);
+            return result is null ? data.FirstOrDefault() : result;
         }
     }
 }

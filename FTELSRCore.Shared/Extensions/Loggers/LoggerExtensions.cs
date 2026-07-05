@@ -1,7 +1,9 @@
-﻿using MongoDB.Bson;
+using FTELSRCore.Extensions.Loggers.Helpers;
+using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using static FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions.Formatters.SRKafkaLogFormatter;
 
 namespace FTELSRCore.Extensions.Loggers
 {
@@ -58,41 +60,83 @@ namespace FTELSRCore.Extensions.Loggers
 
     public static class LoggerExtensions
     {
-        private static readonly Action<ILogger, string, string, string, string, Exception> _request;
+        private static readonly Action<ILogger, string, string, object, Exception> _debug;
 
-        private static readonly Action<ILogger, string, string, string, Exception> _failLogic;
+        private static readonly Action<ILogger, string, string, object, Exception> _warning;
+
+        #region +++++++++++++++++ REQUEST +++++++++++++++++
 
         private static readonly Action<ILogger, string, string, Exception> _requestWithoutParams;
 
-        private static readonly Action<ILogger, string, string, string, Exception> _response;
+        private static readonly Action<ILogger, string, string, string, object, Exception> _request;
+
+        #endregion +++++++++++++++++ REQUEST +++++++++++++++++
+
+        #region +++++++++++++++++ RESPONSE +++++++++++++++++
+
+        private static readonly Action<ILogger, string, string, object, Exception> _response;
+
         private static readonly Action<ILogger, string, string, Exception> _responseWithoutParams;
-        private static readonly Action<ILogger, string, string, long, string, string, Exception> _responseWithTracing;
 
-        private static readonly Action<ILogger, string, string, string, Exception> _info;
-        private static readonly Action<ILogger, string, string, string, Exception> _infoWithFilterDefinition;
+        private static readonly Action<ILogger, string, string, long, string, object, Exception> _responseWithTracing;
 
-        private static readonly Action<ILogger, string, string, string, Exception> _warning;
-        private static readonly Action<ILogger, string, string, string, Exception> _debug;
+        #endregion +++++++++++++++++ RESPONSE +++++++++++++++++
 
-        private static readonly Action<ILogger, string, string, string, Exception> _errorResult;
+        #region +++++++++++++++++ INFOMATION +++++++++++++++++
 
-        private static readonly Action<ILogger, string, string, long, string, string, Exception> _mediaRResultWithTracing;
+        private static readonly Action<ILogger, string, string, object, Exception> _info;
 
-        private static readonly Action<ILogger, string, string, string, Exception> _kafkaErrorResult;
+        private static readonly Action<ILogger, string, string, string, object, Exception> _failLogic;
 
-        private static readonly Action<ILogger, string, string, string, Exception> _httpResult;
-        private static readonly Action<ILogger, string, string, string, Exception> _httpErrorResult;
-        private static readonly Action<ILogger, string, string, string, long, string, string, Exception> _httpResultWithTracing;
+        #endregion +++++++++++++++++ INFOMATION +++++++++++++++++
 
-        private static readonly Action<ILogger, string, string, string, Exception> _error;
-        private static readonly Action<ILogger, string, string, string, Exception> _errorException;
+        #region +++++++++++++++++ HTTP +++++++++++++++++
 
-        private static readonly Action<ILogger, string, string, string, Exception> _connection;
-        private static readonly Action<ILogger, string, string, string, Exception> _connectionError;
+        private static readonly Action<ILogger, string, string, object, Exception> _httpResult;
+
+        #endregion +++++++++++++++++ HTTP +++++++++++++++++
+
+        #region +++++++++++++++++ MEDIAR +++++++++++++++++
+
+        private static readonly Action<ILogger, string, string, long, string, object, Exception> _mediaRResultWithTracing;
+
+        #endregion +++++++++++++++++ MEDIAR +++++++++++++++++
+
+        #region +++++++++++++++++ ERORR +++++++++++++++++
+
+        private static readonly Action<ILogger, string, string, string, object, Exception> _errorResult;
+
+        private static readonly Action<ILogger, string, string, string, object, Exception> _error;
+
+        #endregion +++++++++++++++++ ERORR +++++++++++++++++
+
+        #region +++++++++++++++++ KAFKA +++++++++++++++++
+
+        private static readonly Action<ILogger, string, string, string, object, Exception> _kafka;
+
+        private static readonly Action<ILogger, string, string, object, Exception> _kafkaErrorWithoutTopic;
+
+        private static readonly Action<ILogger, string, string, string, object, Exception> _kafkaErrorResult;
+
+        #endregion +++++++++++++++++ KAFKA +++++++++++++++++
+
+        private static readonly Action<ILogger, string, string, object, Exception> _connection;
 
         static LoggerExtensions()
         {
-            _request = LoggerMessage.Define<string, string, string, string>(
+            _debug = LoggerMessage.Define<string, string, object>(
+                LogLevel.Debug,
+                new EventId(EventIds.Debug, nameof(Debug)),
+                "{ClassName} - {MethodName} -- debug: {Message}");
+
+            _warning = LoggerMessage.Define<string, string, object>(
+                LogLevel.Warning,
+                new EventId(EventIds.Warning, nameof(Warning)),
+                "{ClassName} - {MethodName} -- warning: {Message}");
+
+            #region +++++++++++++++++ REQUEST +++++++++++++++++
+
+            _request = LoggerMessage.Define<string, string, string, object>(
                 LogLevel.Information,
                 new EventId(EventIds.Request, nameof(Request)),
                 "{ClassName} - {MethodName} -- request {RequestName}: {Parameters}");
@@ -102,95 +146,96 @@ namespace FTELSRCore.Extensions.Loggers
                 new EventId(EventIds.Request, "RequestWithoutParams"),
                 "{ClassName} - {MethodName} -- request");
 
-            _response = LoggerMessage.Define<string, string, string>(
+            #endregion +++++++++++++++++ REQUEST +++++++++++++++++
+
+            #region +++++++++++++++++ RESPONSE +++++++++++++++++
+
+            _response = LoggerMessage.Define<string, string, object>(
                 LogLevel.Information,
                 new EventId(EventIds.Response, nameof(Response)),
                 "{ClassName} - {MethodName} -- response: {Message}");
-
-            _responseWithTracing = LoggerMessage.Define<string, string, long, string, string>(
-                LogLevel.Information,
-                new EventId(EventIds.Response, nameof(Response)),
-                "{ClassName} - {MethodName} - [Latency:{Latency} ms -> LatencyRating:{LatencyRating}] -- response: {Message}");
 
             _responseWithoutParams = LoggerMessage.Define<string, string>(
                 LogLevel.Information,
                 new EventId(EventIds.Response, "ResponseWithoutParams"),
                 "{ClassName} - {MethodName} -- response");
 
-            _info = LoggerMessage.Define<string, string, string>(
+            _responseWithTracing = LoggerMessage.Define<string, string, long, string, object>(
+                LogLevel.Information,
+                new EventId(EventIds.Response, "ResponseWithTracing"),
+                "{ClassName} - {MethodName} - [Latency:{ResponseTimeMs}ms -> LatencyRating:{LatencyRating}] -- response: {Message}");
+
+            #endregion +++++++++++++++++ RESPONSE +++++++++++++++++
+
+            #region +++++++++++++++++ INFOMATION +++++++++++++++++
+
+            _info = LoggerMessage.Define<string, string, object>(
                 LogLevel.Information,
                 new EventId(EventIds.Info, nameof(Info)),
                 "{ClassName} - {MethodName} -- info: {Message}");
 
-            _infoWithFilterDefinition = LoggerMessage.Define<string, string, string>(
-                 LogLevel.Information,
-                 new EventId(EventIds.Info, nameof(Info)),
-                 "{ClassName} - {MethodName} -- FilterDefinition: {Parameters}");
-
-            _warning = LoggerMessage.Define<string, string, string>(
-                LogLevel.Warning,
-                new EventId(EventIds.Warning, nameof(Warning)),
-                "{ClassName} - {MethodName} -- warning: {Message}");
-
-            _debug = LoggerMessage.Define<string, string, string>(
-                LogLevel.Debug,
-                new EventId(EventIds.Debug, nameof(Debug)),
-                "{ClassName} - {MethodName} -- debug: {Message}");
-
-            _errorResult = LoggerMessage.Define<string, string, string>(
-                LogLevel.Error,
-                new EventId(EventIds.ErrorResult, nameof(ErrorResult)),
-                "{ClassName} - {MethodName} -- response error result: {Message}");
-
-            _mediaRResultWithTracing = LoggerMessage.Define<string, string, long, string, string>(
+            _failLogic = LoggerMessage.Define<string, string, string, object>(
                 LogLevel.Information,
-                new EventId(EventIds.MediaRResult, nameof(MediaRResult)),
-                "------------MEDIAR------------ {ClassName} - {MethodName} - [Latency:{Latency} ms -> LatencyRating:{LatencyRating}] -- response MEDIAR Key: {Message}");
+                new EventId(EventIds.FailLogic, nameof(FailLogic)),
+                "{ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- fail logic: {Message}");
 
-            _kafkaErrorResult = LoggerMessage.Define<string, string, string>(
-               LogLevel.Error,
-               new EventId(EventIds.KafkaErrorResult, nameof(KafkaErrorResult)),
-               "------------KAFKA------------ {ClassName} - {MethodName} -- response KAFKA error result: {Message}");
+            #endregion +++++++++++++++++ INFOMATION +++++++++++++++++
 
-            _httpErrorResult = LoggerMessage.Define<string, string, string>(
-                LogLevel.Error,
-                new EventId(EventIds.HttpErrorResult, nameof(HttpErrorResult)),
-                "------------HTTP------------ {ClassName} - {MethodName} -- response HTTP error result: {Message}");
+            #region +++++++++++++++++ HTTP +++++++++++++++++
 
-            _httpResult = LoggerMessage.Define<string, string, string>(
+            _httpResult = LoggerMessage.Define<string, string, object>(
                 LogLevel.Information,
                 new EventId(EventIds.HttpResult, nameof(HttpResult)),
                 "------------HTTP------------ {ClassName} - {MethodName} -- response HTTP result: {Message}");
 
-            _httpResultWithTracing = LoggerMessage.Define<string, string, string, long, string, string>(
-                LogLevel.Information,
-                new EventId(EventIds.HttpResult, nameof(HttpResult)),
-                "------------HTTP------------ {MethodName} - [{Uri} :: StatusCode:{StatusCode} :: Latency:{Latency}ms -> LatencyRating:{LatencyRating}] -- response HTTP result: {Message}");
+            #endregion +++++++++++++++++ HTTP +++++++++++++++++
 
-            _error = LoggerMessage.Define<string, string, string>(
+            #region +++++++++++++++++ MEDIAR +++++++++++++++++
+
+            _mediaRResultWithTracing = LoggerMessage.Define<string, string, long, string, object>(
+                LogLevel.Information,
+                new EventId(EventIds.MediaRResult, nameof(MediaRResult)),
+                "------------MEDIAR------------ {ClassName} - {MethodName} - [Latency:{ResponseTimeMs} ms -> LatencyRating:{LatencyRating}] -- response MEDIAR Key: {Message}");
+
+            #endregion +++++++++++++++++ MEDIAR +++++++++++++++++
+
+            #region +++++++++++++++++ ERORR +++++++++++++++++
+
+            _errorResult = LoggerMessage.Define<string, string, string, object>(
+                LogLevel.Error,
+                new EventId(EventIds.ErrorResult, nameof(ErrorResult)),
+                "{ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- response error result: {Message}");
+
+            _error = LoggerMessage.Define<string, string, string, object>(
                 LogLevel.Error,
                 new EventId(EventIds.Error, nameof(Error)),
-                "{ClassName} - {MethodName} -- error: {Message}");
+                "{ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error: {Message}");
 
-            _failLogic = LoggerMessage.Define<string, string, string>(
-                LogLevel.Information,
-                new EventId(EventIds.FailLogic, nameof(FailLogic)),
-                "{ClassName} - {MethodName} -- fail logic: {Message}");
+            #endregion +++++++++++++++++ ERORR +++++++++++++++++
 
-            _errorException = LoggerMessage.Define<string, string, string>(
-                LogLevel.Error,
-                new EventId(EventIds.ErrorException, nameof(ErrorException)),
-                "{ClassName} - {MethodName} -- error: {Message}");
+            #region +++++++++++++++++ KAFKA +++++++++++++++++
 
-            _connection = LoggerMessage.Define<string, string, string>(
+            _kafka = LoggerMessage.Define<string, string, string, object>(
+               LogLevel.Information,
+               new EventId(EventIds.Info, "Kafka"),
+               "------------KAFKA------------ {ClassName} - {MethodName} - [Topic:{Topic}] -- info: {Message}");
+
+            _kafkaErrorResult = LoggerMessage.Define<string, string, string, object>(
+               LogLevel.Error,
+               new EventId(EventIds.KafkaErrorResult, nameof(KafkaErrorResult)),
+               "------------KAFKA------------ {ClassName} - {MethodName} - [Topic:{Topic}] -- response KAFKA error result: {Message}");
+
+            _kafkaErrorWithoutTopic = LoggerMessage.Define<string, string, object>(
+               LogLevel.Error,
+               new EventId(EventIds.KafkaErrorResult, nameof(KafkaErrorResult)),
+               "------------KAFKA------------ {ClassName} - {MethodName} -- response KAFKA error result: {Message}");
+
+            #endregion +++++++++++++++++ KAFKA +++++++++++++++++
+
+            _connection = LoggerMessage.Define<string, string, object>(
                 LogLevel.Information,
                 new EventId(EventIds.Connection, nameof(Connection)),
                 "------------CONNECTION------------ {ClassName} - {MethodName} -- message: {Message}.");
-
-            _connectionError = LoggerMessage.Define<string, string, string>(
-                LogLevel.Error,
-                new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
-                "------------CONNECTION------------ {ClassName} - {MethodName} -- error message: {Message}.");
         }
 
         private static string LatencyRatingData(long latency)
@@ -204,6 +249,18 @@ namespace FTELSRCore.Extensions.Loggers
             };
         }
 
+        public static void Warning(this ILogger logger, string className, string methodName, object message, Exception e = null)
+        {
+            _warning(logger, className, methodName, message, e);
+        }
+
+        public static void Debug(this ILogger logger, string className, string methodName, object message, Exception e = null)
+        {
+            _debug(logger, className, methodName, message, e);
+        }
+
+        #region +++++++++++++++++ REQUEST +++++++++++++++++
+
         public static void Request(this ILogger logger, string className, string methodName, Exception e = null)
         {
             _requestWithoutParams(logger, className, methodName, e);
@@ -211,49 +268,57 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void Request(this ILogger logger, string className, string methodName, string requestName, object parameters, Exception e = null)
         {
-            _request(logger, className, methodName, requestName, parameters.ToJSon(), e);
-        }
-
-        public static void Request(this ILogger logger, string className, string methodName, string requestName, string parameters, Exception e = null)
-        {
             _request(logger, className, methodName, requestName, parameters, e);
         }
+
+        #endregion +++++++++++++++++ REQUEST +++++++++++++++++
+
+        #region +++++++++++++++++ REPONSE +++++++++++++++++
 
         public static void Response(this ILogger logger, string className, string methodName, Exception e = null)
         {
             _responseWithoutParams(logger, className, methodName, e);
         }
 
-        public static void Response(this ILogger logger, string className, string methodName, string message, Exception e = null)
+        public static void Response(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
             _response(logger, className, methodName, message, e);
         }
 
-        public static void Response(this ILogger logger, string className, string methodName, long latency, string message, Exception e = null)
+        public static void Response(this ILogger logger, string className, string methodName, long latency, object message, Exception e = null)
         {
             _responseWithTracing(logger, className, methodName, latency, LatencyRatingData(latency: latency), message, e);
         }
 
-        public static void Info(this ILogger logger, string className, string methodName, string message, Exception e = null)
+        #endregion +++++++++++++++++ REPONSE +++++++++++++++++
+
+        #region +++++++++++++++++ INFORMATION +++++++++++++++++
+
+        public static void Info(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
             _info(logger, className, methodName, message, e);
+        }
+
+        public static void FailLogic(this ILogger logger, string className, string methodName, object message, Exception e = null)
+        {
+            _failLogic(logger, className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message, e);
         }
 
         public static void Info<T>(this ILogger logger, string className, string methodName, FilterDefinition<T> parameters, Exception e = null) where T : class
         {
             try
             {
-                MongoDB.Bson.BsonDocument bsonFilterElements =
-                  parameters.Render(new RenderArgs<T>(
-                      BsonSerializer.SerializerRegistry.GetSerializer<T>(),
-                      BsonSerializer.SerializerRegistry
-                  ));
+                BsonDocument bsonFilterElements =
+                    parameters.Render(
+                        new RenderArgs<T>(
+                            BsonSerializer.SerializerRegistry.GetSerializer<T>(),
+                            BsonSerializer.SerializerRegistry));
 
-                _infoWithFilterDefinition(logger, className, methodName, bsonFilterElements?.ToJSon(), e);
+                _info(logger, className, methodName, bsonFilterElements?.ToJSon(), e);
             }
             catch (Exception exception)
             {
-                _errorException(logger, className, methodName, $"Error while rendering FilterDefinition to BsonDocument of {typeof(T)?.Name}", exception);
+                ErrorException(logger, className, methodName, message: $"Error while rendering FilterDefinition of {typeof(T)?.Name}", e: exception);
             }
         }
 
@@ -261,98 +326,194 @@ namespace FTELSRCore.Extensions.Loggers
         {
             try
             {
-                string planJson = parameters.ToJson(new MongoDB.Bson.IO.JsonWriterSettings
+                string planJson = parameters.ToJson(new JsonWriterSettings
                 {
                     Indent = false,
                     OutputMode = JsonOutputMode.RelaxedExtendedJson
                 });
 
-                _infoWithFilterDefinition(logger, className, methodName, planJson, e);
+                _info(logger, className, methodName, planJson, e);
             }
             catch (Exception exception)
             {
-                _errorException(logger, className, methodName, $"Error while rendering BsonDocument[]", exception);
+                ErrorException(logger, className, methodName, message: $"Error while rendering BsonDocument[]", e: exception);
             }
         }
 
-        public static void Warning(this ILogger logger, string className, string methodName, string message, Exception e = null)
+        #endregion +++++++++++++++++ INFORMATION +++++++++++++++++
+
+        #region +++++++++++++++++ HTTP +++++++++++++++++
+
+        public static void HttpResult(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _warning(logger, className, methodName, message, e);
+            _httpResult(logger, className, methodName, message, e);
         }
 
-        public static void Debug(this ILogger logger, string className, string methodName, string message, Exception e = null)
+        public static void HttpErrorResult(this ILogger logger, string className, string methodName, object message)
         {
-            _debug(logger, className, methodName, message, e);
+            logger.Log(LogLevel.Error,
+                new EventId(EventIds.HttpErrorResult, nameof(HttpErrorResult)),
+                "------------HTTP------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- response HTTP error result: {Message}",
+                className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message);
         }
 
-        public static void ErrorResult(this ILogger logger, string className, string methodName, object message, Exception e = null)
+        public static void HttpErrorResult(this ILogger logger, string className, string methodName, object message, Exception e)
         {
-            _errorResult(logger, className, methodName, message.ToJSon(), e);
+            logger.Log(LogLevel.Error,
+                new EventId(EventIds.HttpErrorResult, nameof(HttpErrorResult)),
+                "------------HTTP------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- response HTTP error result: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
+                className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message, e?.Message?.Trim(), e?.StackTrace?.Trim());
         }
 
-        public static void ErrorResult(this ILogger logger, string className, string methodName, string message, Exception e = null)
+        public static void HttpResultWithTracing(
+            this ILogger logger,
+            string className, string methodName,
+            string statusCode, string httpMethod,
+            long responseTimeMs,
+            string uri,
+            object message,
+            string systemOwner = "",
+            DirectionType direction = DirectionType.Inbound)
         {
-            _errorResult(logger, className, methodName, message, e);
+            logger.Log(
+                LogLevel.Information,
+                new EventId(EventIds.HttpResult, nameof(HttpResultWithTracing)),
+                "------------HTTP------------ {ClassName} - {MethodName} " +
+                "- [HttpMethod:{HttpMethod} :: Endpoint:{Endpoint} :: SystemOwner:{SystemOwner}({Direction}) :: HttpStatusCode:{HttpStatusCode} :: Latency:{ResponseTimeMs}ms -> LatencyRating:{LatencyRating}] " +
+                "- [ErrorCategory: {ErrorCategory}] -- response HTTP result: {Message}",
+                className, methodName, httpMethod, uri, systemOwner, direction, statusCode,
+                responseTimeMs, LatencyRatingData(latency: responseTimeMs),
+                LoggerErrorCategoriesHelper.ApiCategory.ResolveCategory(statusCode: (int.TryParse(statusCode, out var statusCodeToInt) ? statusCodeToInt : 0)), message);
         }
+
+        #endregion +++++++++++++++++ HTTP +++++++++++++++++
+
+        #region +++++++++++++++++ MEDIAR +++++++++++++++++
 
         public static void MediaRResult(this ILogger logger, string className, string methodName, long latency, string message, Exception e = null)
         {
             _mediaRResultWithTracing(logger, className, methodName, latency, LatencyRatingData(latency: latency), message, e);
         }
 
-        public static void KafkaErrorResult(this ILogger logger, string className, string methodName, object message, Exception e = null)
+        #endregion +++++++++++++++++ MEDIAR +++++++++++++++++
+
+        #region +++++++++++++++++ KAFKA +++++++++++++++++
+
+        public static void KafkaErrorResult(this ILogger logger, string className, string methodName, string topic, object message, Exception e = null)
         {
-            _kafkaErrorResult(logger, className, methodName, message.ToJSon(), e);
+            _kafkaErrorResult(logger, className, methodName, topic, message, e);
         }
 
-        public static void KafkaErrorResult(this ILogger logger, string className, string methodName, string message, Exception e = null)
+        public static void KafkaErrorWithoutTopic(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _kafkaErrorResult(logger, className, methodName, message.ToJSon(), e);
+            _kafkaErrorWithoutTopic(logger, className, methodName, message, e);
         }
 
-        public static void HttpErrorResult(this ILogger logger, string className, string methodName, object message, Exception e = null)
+        public static void Kafka(this ILogger logger, string className, string methodName, string topic, object message, Exception e = null)
         {
-            _httpErrorResult(logger, className, methodName, message.ToJSon(), e);
+            _kafka(logger, className, methodName, topic, message, e);
         }
 
-        public static void HttpErrorResult(this ILogger logger, string className, string methodName, string message, Exception e = null)
+        #endregion +++++++++++++++++ KAFKA +++++++++++++++++
+
+        #region +++++++++++++++++ ERORR +++++++++++++++++
+
+        public static void ErrorResult(this ILogger logger, string className, string methodName, object message, string errorCategory = "", Exception e = null)
         {
-            _httpErrorResult(logger, className, methodName, message.ToJSon(), e);
+            _errorResult(logger, className, methodName, (!string.IsNullOrWhiteSpace(errorCategory) ? errorCategory : LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC), message, e);
         }
 
-        public static void HttpResult(this ILogger logger, string className, string methodName, object message, Exception e = null)
+        public static void Error(this ILogger logger, string className, string methodName, object message, string errorCategory = "", Exception e = null)
         {
-            _httpResult(logger, className, methodName, message.ToJSon(), e);
+            _error(logger, className, methodName, (!string.IsNullOrWhiteSpace(errorCategory) ? errorCategory : LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC), message, e);
         }
 
-        public static void HttpResult(this ILogger logger, string className, string methodName, string statusCode, long latency, string uri, string message, Exception e = null)
+        public static void ErrorException(this ILogger logger, string className, string methodName, Exception e, string errorCategory = "", object message = null)
         {
-            _httpResultWithTracing(logger, $"{className}_{methodName}", uri, statusCode, latency, LatencyRatingData(latency: latency), message, e);
+            logger.Log(
+                LogLevel.Error,
+                new EventId(EventIds.ErrorException, nameof(ErrorException)),
+                "{ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
+                className, methodName, (!string.IsNullOrWhiteSpace(errorCategory) ? errorCategory : LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC),
+                message, e?.Message?.Trim(), e?.StackTrace?.Trim());
         }
 
-        public static void Error(this ILogger logger, string className, string methodName, string message, Exception e = null)
-        {
-            _error(logger, className, methodName, message, e);
-        }
+        #endregion +++++++++++++++++ ERORR +++++++++++++++++
 
-        public static void FailLogic(this ILogger logger, string className, string methodName, string message, Exception e = null)
-        {
-            _failLogic(logger, className, methodName, message, e);
-        }
+        #region +++++++++++++++++ CONNECTION +++++++++++++++++
 
-        public static void ErrorException(this ILogger logger, string className, string methodName, string message = "", Exception e = null)
-        {
-            _errorException(logger, className, methodName, $"{Environment.NewLine} -- Message: {message} {Environment.NewLine} -- Exception: {e?.Message?.Trim()} {Environment.NewLine} -- StackTrace: {e?.StackTrace?.Trim()} {Environment.NewLine} ", e);
-        }
-
-        public static void Connection(this ILogger logger, string className, string methodName, string message, Exception e = null)
+        public static void Connection(
+            this ILogger logger, string className, string methodName, string message, Exception e = null)
         {
             _connection(logger, className, methodName, message, e);
         }
 
-        public static void ConnectionError(this ILogger logger, string className, string methodName, string message = "", Exception e = null)
+        public static void ConnectionErrorSQL(
+            this ILogger logger, string className, string methodName, Exception e, string message = "")
         {
-            _connectionError(logger, className, methodName, $"{Environment.NewLine} -- Message: {message} {Environment.NewLine} -- Exception: {e?.Message?.Trim()} {Environment.NewLine} -- StackTrace: {e?.StackTrace?.Trim()} {Environment.NewLine} ", e);
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_SQLSERVER, e: e, message: message);
         }
+
+        public static void ConnectionErrorMongoDB(
+            this ILogger logger, string className, string methodName, Exception e, string message = "")
+        {
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_MONGODB, e: e, message: message);
+        }
+
+        public static void ConnectionErrorRedis(this ILogger logger, string className, string methodName, Exception e, string message = "")
+        {
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_REDIS, e: e, message: message);
+        }
+
+        public static void ConnectionErrorKafka(this ILogger logger, string className, string methodName, Exception e, string message = "", string topic = "")
+        {
+            switch (!string.IsNullOrWhiteSpace(topic))
+            {
+                case true:
+                    {
+                        logger.Log(
+                            LogLevel.Error,
+                            new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
+                            "------------CONNECTION------------ {ClassName} - {MethodName} - [Topic:{Topic} - ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
+                            className, methodName, topic,
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message, e?.Message?.Trim(), e?.StackTrace?.Trim());
+
+                        break;
+                    }
+                case false:
+                    {
+                        logger.Log(
+                            LogLevel.Error,
+                            new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
+                            "------------CONNECTION------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
+                            className, methodName,
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message, e?.Message?.Trim(), e?.StackTrace?.Trim());
+
+                        break;
+                    }
+            }
+        }
+
+        public static void ConnectionErrorElasticSearch(this ILogger logger, string className, string methodName, Exception e, string message = "")
+        {
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_ELASTICSEARCH, e: e, message: message);
+        }
+
+        public static void ConnectionErrorRabbitMQ(this ILogger logger, string className, string methodName, Exception e, string message = "")
+        {
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_RABBITMQ, e: e, message: message);
+        }
+
+        private static void ConnectionError(this ILogger logger, string className, string methodName, string errorCategory, Exception e, object message)
+        {
+            logger.Log(
+                LogLevel.Error,
+                new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
+                "------------CONNECTION------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
+                className, methodName, errorCategory,
+                message, e?.Message?.Trim(), e?.StackTrace?.Trim());
+        }
+
+        #endregion +++++++++++++++++ CONNECTION +++++++++++++++++
     }
 }

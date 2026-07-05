@@ -1,5 +1,4 @@
-﻿using FTELSRCore.Data.MongoDB.Helpers;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using Polly;
 using System.Data;
@@ -10,8 +9,10 @@ namespace FTELSRCore.Data.MongoDB.Core
 {
     #region :::::::::::::::::::::::::::::::::: BaseMongoDBRepository Tồn tại <TTable> ::::::::::::::::::::::::::::::::::
 
-    public class CoreMongoDB<TTable> : ICoreMongoDB<TTable> where TTable : class
+    public abstract class CoreMongoDB<TTable> : ICoreMongoDB<TTable> where TTable : class
     {
+        #region :::::::: Ctor ::::::::
+
         private readonly ILogger<CoreMongoDB<TTable>> _logger;
 
         private readonly ResiliencePipeline _pipelineRead;
@@ -30,7 +31,8 @@ namespace FTELSRCore.Data.MongoDB.Core
 
         protected CoreMongoDB(
             string collectionName,
-            IMongoDatabase dbContext,
+            IMongoDatabase dbContextRead,
+            IMongoDatabase dbContextWrite,
             ILogger<CoreMongoDB<TTable>> logger,
             ResiliencePipeline pipelineRead, ResiliencePipeline pipelineWrite)
         {
@@ -38,32 +40,18 @@ namespace FTELSRCore.Data.MongoDB.Core
 
             _dbWriteContext =
                 new Lazy<IMongoCollection<TTable>>(
-                    () => dbContext.GetCollection<TTable>(
-                        name: collectionName,
-                        settings: new MongoCollectionSettings
-                        {
-                            WriteConcern = WriteConcern.W1.With(journal: true)
-                        }));
+                    () => dbContextWrite.GetCollection<TTable>(name: collectionName));
 
             _dbReadContext =
                 new Lazy<IMongoCollection<TTable>>(
-                    () => dbContext.GetCollection<TTable>(
-                        name: collectionName
-                        , settings: new MongoCollectionSettings
-                        {
-                            ReadConcern = ReadConcern.Local,
-                            ReadPreference = ReadPreference.SecondaryPreferred
-                        }
-                        ));
+                    () => dbContextRead.GetCollection<TTable>(name: collectionName));
 
             _pipelineRead = pipelineRead;
 
             _pipelineWrite = pipelineWrite;
         }
 
-        public virtual Lazy<IMongoCollection<TTable>> DbReadContext => _dbReadContext;
-
-        public virtual Lazy<IMongoCollection<TTable>> DbWriteContext => _dbWriteContext;
+        #endregion :::::::: Ctor ::::::::
 
         /// <summary>
         /// Đếm số lượng bản ghi thỏa mãn điều kiện lọc.
@@ -73,18 +61,16 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <returns>Số lượng bản ghi thỏa điều kiện.</returns>
         ///
         public virtual async Task<long> CountAllAsync(
-            FilterDefinition<TTable> filter = null, CancellationToken cancellationToken = default)
+            FilterDefinition<TTable> filter, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            filter ??= FilterDefinition<TTable>.Empty;
-
             return await _pipelineRead.ExecuteAsync(
-                async cancellationToken =>
+                callback: async ct =>
                 {
                     return
                         await _dbReadContext.Value.CountDocumentsAsync(
-                            filter: filter, cancellationToken: cancellationToken);
+                            filter: filter, cancellationToken: ct).ConfigureAwait(false);
                 }, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
@@ -100,7 +86,8 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <returns></returns>
         ///
         public virtual async Task<List<TDto>> FindAllPagingAsync<TDto>(
-            FilterDefinition<TTable> filter, SortDefinition<TTable> sortDefinition,
+            FilterDefinition<TTable> filter,
+            SortDefinition<TTable> sortDefinition,
             int pageNumber = 1, int pageSize = 10, CancellationToken cancellationToken = default) where TDto : class
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -653,15 +640,10 @@ namespace FTELSRCore.Data.MongoDB.Core
 
                     switch (result.MatchedCount > 0)
                     {
+                        // Tìm thấy document — thành công dù data không thay đổi (no-op idempotent)
                         case true:
-                            {
-                                if (result is { ModifiedCount: > 0 } or { ModifiedCount: 0 })
-                                {
-                                    return true;
-                                }
+                            return true;
 
-                                break;
-                            }
                         case false:
                             {
                                 if (result is { MatchedCount: 0, ModifiedCount: 0, UpsertedId: not null })
@@ -733,15 +715,10 @@ namespace FTELSRCore.Data.MongoDB.Core
 
                     switch (result.MatchedCount > 0)
                     {
+                        // Tìm thấy document — thành công dù data không thay đổi (no-op idempotent)
                         case true:
-                            {
-                                if (result is { ModifiedCount: > 0 } or { ModifiedCount: 0 })
-                                {
-                                    return true;
-                                }
+                            return true;
 
-                                break;
-                            }
                         case false:
                             {
                                 if (result is { MatchedCount: 0, ModifiedCount: 0, UpsertedId: not null })
@@ -813,15 +790,10 @@ namespace FTELSRCore.Data.MongoDB.Core
 
                     switch (result.MatchedCount > 0)
                     {
+                        // Tìm thấy document — thành công dù data không thay đổi (no-op idempotent)
                         case true:
-                            {
-                                if (result is { ModifiedCount: > 0 } or { ModifiedCount: 0 })
-                                {
-                                    return true;
-                                }
+                            return true;
 
-                                break;
-                            }
                         case false:
                             {
                                 if (result is { MatchedCount: 0, ModifiedCount: 0, UpsertedId: not null })
@@ -898,15 +870,10 @@ namespace FTELSRCore.Data.MongoDB.Core
 
                     switch (result.MatchedCount > 0)
                     {
+                        // Tìm thấy document — thành công dù data không thay đổi (no-op idempotent)
                         case true:
-                            {
-                                if (result is { ModifiedCount: > 0 } or { ModifiedCount: 0 })
-                                {
-                                    return true;
-                                }
+                            return true;
 
-                                break;
-                            }
                         case false:
                             {
                                 if (result is { MatchedCount: 0, ModifiedCount: 0, UpsertedId: not null })
@@ -1282,7 +1249,7 @@ namespace FTELSRCore.Data.MongoDB.Core
 
             options ??= _aggregateOptions;
 
-            IAsyncCursor<TResult> cursor =
+            using IAsyncCursor<TResult> cursor =
                 await _pipelineRead.ExecuteAsync(
                     async cancellationToken =>
                     {
@@ -1324,23 +1291,15 @@ namespace FTELSRCore.Data.MongoDB.Core
                 return null;
             }
 
-            List<BsonDocument> optimized =
-                MongoPipelineOptimizerHelper.Optimize(pipeline: [.. pipeline]);
-
-            if (optimized is null)
-            {
-                return null;
-            }
-
             options ??= _aggregateOptions;
 
-            IAsyncCursor<TTable> cursor =
+            using IAsyncCursor<TTable> cursor =
                 await _pipelineRead.ExecuteAsync(
                     async cancellationToken =>
                     {
                         return
                             await _dbReadContext.Value.AggregateAsync<TTable>(
-                                pipeline: optimized, options: options, cancellationToken: cancellationToken).ConfigureAwait(false);
+                                pipeline: pipeline, options: options, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             List<TTable> result = [];
@@ -1378,23 +1337,15 @@ namespace FTELSRCore.Data.MongoDB.Core
                 return null;
             }
 
-            List<BsonDocument> optimized =
-                MongoPipelineOptimizerHelper.Optimize(pipeline: [.. pipeline]);
-
-            if (optimized is null)
-            {
-                return null;
-            }
-
             options ??= _aggregateOptions;
 
-            IAsyncCursor<TResult> cursor =
+            using IAsyncCursor<TResult> cursor =
                 await _pipelineRead.ExecuteAsync(
                     async cancellationToken =>
                     {
                         return
                             await _dbReadContext.Value.AggregateAsync<TResult>(
-                                pipeline: optimized, options: options, cancellationToken: cancellationToken).ConfigureAwait(false);
+                                pipeline: pipeline, options: options, cancellationToken: cancellationToken).ConfigureAwait(false);
                     }, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             List<TResult> result = [];

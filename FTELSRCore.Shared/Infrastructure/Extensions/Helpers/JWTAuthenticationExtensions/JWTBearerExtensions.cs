@@ -1,16 +1,21 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using FTELSRCore.Extensions.Loggers.Helpers;
+using FTELSRCore.Infrastructure.MiddleWares.Helpers;
+using FTELSRCore.Wrappers.ErrorCodes;
+using FTELSRCore.Wrappers.ErrorCodes.Catalogs;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using System.Net;
+using System.Net.Mime;
 using System.Text;
 
 namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensions
 {
     public static class JWTBearerExtensions
     {
-        public static Action<JwtBearerOptions> AddJWTBearer(ILogger logger, JWTOptions jwtOptions)
+        public static Action<JwtBearerOptions> AddJWTBearer(ILogger logger, JWTOptions jwtOptions, JWTBearerModel model)
         {
             if (EnvironmentExtensions.GetEnvironment() is not EnvironmentExtensions.EProd)
             {
@@ -58,36 +63,67 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                             if (context.Exception is SecurityTokenExpiredException)
                             {
                                 logger.ErrorException(nameof(JWTBearerExtensions), nameof(AddJWTBearer),
+                                    errorCategory: LoggerErrorCategoriesHelper.SecurityCategory.SEC_UNAUTHORIZED,
                                     message: $"SecurityTokenExpiredException - Path: {context?.Request?.Path} " +
                                     $"- Headers: {JsonConvert.SerializeObject(context?.Request?.Headers?.ToDictionary(h => h.Key, h => h.Value.ToString()))}", e: context.Exception);
 
-                                context.Response.ContentType = "application/json";
+                                context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                                return context.Response.WriteAsJsonAsync(
-                                    Result.FailSystem("Thông tin Token được cấp đã hết hạn.", (int)HttpStatusCode.Unauthorized));
+                                CatalogsErorrCodeModel wrapperByCode =
+                                    ResponseWrapperByCodeMapper.FromStatusCode(
+                                        statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
+
+                                Result result = Result.FailSystem(
+                                    statusCode: (int)HttpStatusCode.Unauthorized,
+                                    message: "Thông tin Token được cấp đã hết hạn",
+                                    serviceName: model.ServiceName ?? CommonBaseConstant.System,
+                                    metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
+                                    error: new ResultFTELCoreErrorModel
+                                    {
+                                        Code = wrapperByCode.Code,
+                                        Retryable = wrapperByCode.Retryable
+                                    });
+
+                                return context.Response.WriteAsJsonAsync(result);
                             }
                             else
                             {
                                 logger.ErrorException(nameof(JWTBearerExtensions), nameof(AddJWTBearer),
+                                    errorCategory: LoggerErrorCategoriesHelper.SecurityCategory.SEC_UNAUTHORIZED,
                                     message: $"OnAuthenticationFailed - Path: {context?.Request?.Path} " +
                                     $"- Headers: {JsonConvert.SerializeObject(context?.Request?.Headers?.ToDictionary(h => h.Key, h => h.Value.ToString()))}", e: context.Exception);
 
                                 context.NoResult();
-                                context.Response.ContentType = "application/json";
+                                context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+
+                                CatalogsErorrCodeModel wrapperByCode =
+                                    ResponseWrapperByCodeMapper.FromStatusCode(
+                                        statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
+
+                                Result result = Result.FailSystem(
+                                    statusCode: (int)HttpStatusCode.Unauthorized,
+                                    message: "Xử lý đăng nhập để cấp quyền không thành công",
+                                    serviceName: model.ServiceName ?? CommonBaseConstant.System,
+                                    metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
+                                    error: new ResultFTELCoreErrorModel
+                                    {
+                                        Code = wrapperByCode.Code,
+                                        Retryable = wrapperByCode.Retryable
+                                    });
 
                                 switch (EnvironmentExtensions.GetEnvironment())
                                 {
                                     case EnvironmentExtensions.EProd or EnvironmentExtensions.EStag:
                                         {
-                                            return context.Response.WriteAsJsonAsync(
-                                                Result.FailSystem("Xử lý đăng nhập để cấp quyền không thành công.", (int)HttpStatusCode.Unauthorized));
+                                            return context.Response.WriteAsJsonAsync(result);
                                         }
                                     default:
                                         {
-                                            return context.Response.WriteAsJsonAsync(
-                                                Result.FailSystem(JsonConvert.SerializeObject(context.Exception), (int)HttpStatusCode.Unauthorized));
+                                            result.Messages = [JsonConvert.SerializeObject(context.Exception)];
+
+                                            return context.Response.WriteAsJsonAsync(result);
                                         }
                                 }
                             }
@@ -99,14 +135,29 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                             if (!context.Response.HasStarted)
                             {
                                 logger.Error(nameof(JWTBearerExtensions), nameof(AddJWTBearer),
+                                    errorCategory: LoggerErrorCategoriesHelper.SecurityCategory.SEC_FORBIDDEN,
                                     message: $"OnChallenge - Path: {context?.Request?.Path} " +
                                              $"- Headers: {JsonConvert.SerializeObject(context?.Request?.Headers?.ToDictionary(h => h.Key, h => h.Value.ToString()))}");
 
-                                context.Response.ContentType = "application/json";
+                                context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                                return context.Response.WriteAsJsonAsync(
-                                    Result.FailSystem("Yêu cầu chưa được cấp quyền.", (int)HttpStatusCode.Unauthorized));
+                                CatalogsErorrCodeModel wrapperByCode =
+                                    ResponseWrapperByCodeMapper.FromStatusCode(
+                                        statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
+
+                                Result result = Result.FailSystem(
+                                    message: "Yêu cầu chưa được cấp quyền",
+                                    statusCode: (int)HttpStatusCode.Unauthorized,
+                                    serviceName: model.ServiceName ?? CommonBaseConstant.System,
+                                    metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
+                                    error: new ResultFTELCoreErrorModel
+                                    {
+                                        Code = wrapperByCode.Code,
+                                        Retryable = wrapperByCode.Retryable
+                                    });
+
+                                return context.Response.WriteAsJsonAsync(result);
                             }
 
                             return Task.CompletedTask;
@@ -114,17 +165,37 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                         OnForbidden = context =>
                         {
                             logger.Error(nameof(JWTBearerExtensions), nameof(AddJWTBearer),
+                                errorCategory: LoggerErrorCategoriesHelper.SecurityCategory.SEC_FORBIDDEN,
                                 message: $"OnForbidden - Path: {context?.Request?.Path} - Headers: {JsonConvert.SerializeObject(context?.Request?.Headers)}");
 
-                            context.Response.ContentType = "application/json";
+                            context.Response.ContentType = MediaTypeNames.Application.Json;
                             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
 
-                            return context.Response.WriteAsJsonAsync(
-                                Result.FailSystem(message: "Yêu cầu không được phép truy cập tài nguyên này.", statusCode: (int)HttpStatusCode.Forbidden));
+                            CatalogsErorrCodeModel wrapperByCode =
+                                ResponseWrapperByCodeMapper.FromStatusCode(
+                                    statusCode: HttpStatusCode.Forbidden, sourceType: ErrorSourceType.Authentication);
+
+                            Result result = Result.FailSystem(
+                                statusCode: (int)HttpStatusCode.Forbidden,
+                                message: "Yêu cầu không được phép truy cập tài nguyên này",
+                                serviceName: model.ServiceName ?? CommonBaseConstant.System,
+                                metadata: BuildMetaHelper.Build(httpContext: context.HttpContext),
+                                error: new ResultFTELCoreErrorModel
+                                {
+                                    Code = wrapperByCode.Code,
+                                    Retryable = wrapperByCode.Retryable
+                                });
+
+                            return context.Response.WriteAsJsonAsync(result);
                         }
                     };
             };
         }
+    }
+
+    public record JWTBearerModel
+    {
+        public string ServiceName { get; set; }
     }
 
     /// <summary>

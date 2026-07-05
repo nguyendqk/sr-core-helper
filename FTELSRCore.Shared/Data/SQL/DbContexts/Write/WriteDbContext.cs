@@ -1,4 +1,5 @@
-﻿using FTELSRCore.Abstractions;
+﻿using System.Formats.Asn1;
+using FTELSRCore.Abstractions;
 using FTELSRCore.Abstractions.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -53,7 +54,7 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
 
             if (result > 0)
             {
-                _ = OnAfterSaveChanges(detectChangesAudit);
+                await OnAfterSaveChanges(detectChangesAudit);
             }
 
             return result;
@@ -67,7 +68,7 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
 
             if (result >= 1)
             {
-                _ = OnAfterSaveChanges();
+                await OnAfterSaveChanges();
             }
 
             return result;
@@ -359,7 +360,7 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
             return base.SaveChangesAsync();
         }
 
-        public Task DispatchDomainEvents(List<IDomainEvent> domainEvents = null)
+        public async Task DispatchDomainEvents(List<IDomainEvent> domainEvents = null)
         {
             domainEvents ??= [];
 
@@ -374,27 +375,23 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
                 domainEvents.AddRange(domainEventsInSaveChange);
             }
 
-            if (domainEvents.Count is 0)
-            {
-                return Task.CompletedTask;
-            }
-
-            _ = Task.Run(async () =>
-            {
-                IServiceScope scope = _serviceScopeFactory.Value.CreateScope();
-
-                IPublisher publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
-
-                List<Task> tasks =
-                    [..domainEvents.Distinct().Select(
-                        domainEvent => publisher.Publish(domainEvent, cancellationToken: CancellationToken.None))];
-
-                await Task.WhenAll(tasks).ConfigureAwait(false);
-            }, cancellationToken: CancellationToken.None);
+            List<IDomainEvent> domainEventsToPublish = [.. domainEvents.Distinct()];
 
             ChangeTracker.Clear();
 
-            return Task.CompletedTask;
+            if (domainEventsToPublish.Count is 0)
+            {
+                return;
+            }
+
+            await using var scope = _serviceScopeFactory.Value.CreateAsyncScope();
+
+            IPublisher publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+
+            foreach (IDomainEvent domainEvent in domainEventsToPublish)
+            {
+                await publisher.Publish(domainEvent, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+            }
         }
     }
 }

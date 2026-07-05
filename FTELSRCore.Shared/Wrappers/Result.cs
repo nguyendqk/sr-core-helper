@@ -1,88 +1,130 @@
-﻿using System.Net;
+﻿using FTELSRCore.Wrappers.ErrorCodes;
+using FTELSRCore.Wrappers.ErrorCodes.Catalogs;
+using System.Net;
+using System.Text.Json.Serialization;
 
 namespace FTELSRCore.Wrappers
 {
     public class Result : IResult
     {
+        [JsonPropertyName("code")]
         public int Code { get; set; }
 
+        [JsonPropertyName("status")]
         public string Status { get; set; }
 
-        public bool Succeeded { get; set; }
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
 
+        [JsonPropertyName("dispatched")]
+        public bool Dispatched { get; set; }
+
+        //[JsonPropertyName("succeeded")]
+        //public bool Succeeded { get; set; } = true;
+
+        [JsonPropertyName("messages")]
         public List<string> Messages { get; set; }
 
+        [JsonPropertyName("system")]
         public string System { get; set; } = CommonBaseConstant.System;
+
+        [JsonPropertyName("error")]
+        public ResultFTELCoreErrorModel Error { get; set; } = null;
+
+        [JsonPropertyName("meta")]
+        public ResultFTELCoreMetadataModel Meta { get; set; } = null;
 
         protected Result()
         {
         }
 
+        private static readonly CatalogsErorrCodeModel _catalogsBadRequest =
+            ResponseWrapperByCodeMapper.FromStatusCode(
+                statusCode: HttpStatusCode.BadRequest, sourceType: ErrorSourceType.General);
+
+        private static readonly ResultFTELCoreErrorModel _failLogicDefault =
+            new()
+            {
+                Code = _catalogsBadRequest.Code,
+                Retryable = _catalogsBadRequest.Retryable
+            };
+
+        private static readonly CatalogsErorrCodeModel _catalogsInternalServerError =
+            ResponseWrapperByCodeMapper.FromStatusCode(
+                statusCode: HttpStatusCode.InternalServerError, sourceType: ErrorSourceType.General);
+
+        private static readonly ResultFTELCoreErrorModel _errorSystemDefault = new()
+        {
+            Retryable = _catalogsInternalServerError.Retryable,
+            Code = _catalogsInternalServerError.Code
+        };
+
         #region ::::::::::::: FAIL :::::::::::::
 
-        public static IResult Fail(int statusCode = (int)HttpStatusCode.BadRequest, bool succeeded = true)
-            => new Result { Succeeded = succeeded, Code = statusCode, Status = statusCode.ConvertHttpStatusCodeCodeByName() };
-
-        public static IResult Fail(string message = "Thực hiện yêu cầu không thành công !", bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+        public static Result Fail(
+            string message = "Thực hiện yêu cầu không thành công", bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
             => new Result
             {
                 Code = statusCode,
                 Messages = [message],
-                Succeeded = succeeded,
-                Status = statusCode.ConvertHttpStatusCodeCodeByName()
+                Success = succeeded,
+                Dispatched = true,
+                Status = statusCode.ConvertHttpStatusCodeCodeByName(),
+                Error = error ?? _failLogicDefault
             };
 
-        public static IResult Fail(List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
+        public static Result Fail(
+            List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
             => new Result
             {
                 Code = statusCode,
                 Messages = messages,
-                Succeeded = succeeded,
-                Status = statusCode.ConvertHttpStatusCodeCodeByName()
+                Success = succeeded,
+                Dispatched = true,
+                Status = statusCode.ConvertHttpStatusCodeCodeByName(),
+                Error = error ?? _failLogicDefault
             };
 
-        public static Task<IResult> FailAsync(int statusCode = (int)HttpStatusCode.OK, bool succeeded = true)
-            => Task.FromResult(Fail(statusCode, succeeded));
+        public static Task<Result> FailAsync(
+            string message = "Thực hiện yêu cầu không thành công", bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => Task.FromResult(Fail(message: message, succeeded: succeeded, statusCode: statusCode, error: error));
 
-        public static Task<IResult> FailAsync(string message = "Thực hiện yêu cầu không thành công !", bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => Task.FromResult(Fail(message, succeeded, statusCode));
-
-        public static Task<IResult> FailAsync(List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => Task.FromResult(Fail(messages, succeeded, statusCode));
+        public static Task<Result> FailAsync(
+            List<string> messages, bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => Task.FromResult(Fail(messages: messages, succeeded: succeeded, statusCode: statusCode, error: error));
 
         #endregion ::::::::::::: FAIL :::::::::::::
 
         #region ::::::::::::: SUCCESS :::::::::::::
 
-        public static IResult Success(int statusCode = (int)HttpStatusCode.OK)
-            => new Result { Succeeded = true, Code = statusCode, Status = statusCode.ConvertHttpStatusCodeCodeByName() };
-
-        public static IResult Success(string message = "Thực hiện yêu cầu thành công !", int statusCode = (int)HttpStatusCode.OK)
+        public static Result Succeed(
+            string message = "Thực hiện yêu cầu thành công", int statusCode = (int)HttpStatusCode.OK)
             => new Result
             {
-                Succeeded = true,
+                Success = true,
+                Dispatched = true,
                 Code = statusCode,
                 Messages = [message],
                 Status = statusCode.ConvertHttpStatusCodeCodeByName()
             };
 
-        public static IResult Success(List<string> messages, int statusCode = (int)HttpStatusCode.OK)
+        public static Result Succeed(List<string> messages, int statusCode = (int)HttpStatusCode.OK)
             => new Result
             {
-                Succeeded = true,
+                Success = true,
+                Dispatched = true,
                 Code = statusCode,
                 Messages = messages,
                 Status = statusCode.ConvertHttpStatusCodeCodeByName()
             };
 
-        public static Task<IResult> SuccessAsync(int statusCode = (int)HttpStatusCode.OK)
-            => Task.FromResult(Success(statusCode));
+        public static Task<Result> SucceedAsync(
+            string message = "Thực hiện yêu cầu thành công", int statusCode = (int)HttpStatusCode.OK)
+            => Task.FromResult(Succeed(message, statusCode));
 
-        public static Task<IResult> SuccessAsync(string message = "Thực hiện yêu cầu thành công !", int statusCode = (int)HttpStatusCode.OK)
-            => Task.FromResult(Success(message, statusCode));
-
-        public static Task<IResult> SuccessAsync(List<string> messages, int statusCode = (int)HttpStatusCode.OK)
-            => Task.FromResult(Success(messages, statusCode));
+        public static Task<Result> SucceedAsync(
+            List<string> messages, int statusCode = (int)HttpStatusCode.OK)
+            => Task.FromResult(Succeed(messages, statusCode));
 
         #endregion ::::::::::::: SUCCESS :::::::::::::
 
@@ -90,160 +132,205 @@ namespace FTELSRCore.Wrappers
         /// Don't recommend use in function
         /// </summary>
         /// <param name="messages"></param>
+        /// <param name="metadata"></param>
+        /// <param name="serviceName"></param>
         /// <param name="statusCode"></param>
+        /// <param name="error"></param>
         /// <returns></returns>
-        public static Result FailSystem(List<string> messages, int statusCode = (int)HttpStatusCode.BadRequest)
-            => new()
+        ///
+        public static Result FailSystem(
+            List<string> messages, ResultFTELCoreMetadataModel metadata, string serviceName, int statusCode = (int)HttpStatusCode.InternalServerError, ResultFTELCoreErrorModel error = null)
+            => new Result
             {
-                Succeeded = false,
+                Success = false,
+                Dispatched = false,
                 Code = statusCode,
                 Messages = messages,
-                Status = statusCode.ConvertHttpStatusCodeCodeByName()
+                System = serviceName,
+                Status = statusCode.ConvertHttpStatusCodeCodeByName(),
+                Meta = metadata,
+                Error = error ?? _errorSystemDefault
             };
 
         /// <summary>
         /// Don't recommend use in function
         /// </summary>
         /// <param name="message"></param>
+        /// <param name="metadata"></param>
+        /// <param name="serviceName"></param>
         /// <param name="statusCode"></param>
+        /// <param name="error"></param>
         /// <returns></returns>
-        public static Result FailSystem(string message, int statusCode = (int)HttpStatusCode.BadRequest)
-             => new()
-             {
-                 Code = statusCode,
-                 Succeeded = false,
-                 Messages = [message],
-                 Status = statusCode.ConvertHttpStatusCodeCodeByName()
-             };
+        ///
+        public static Result FailSystem(
+            string message, ResultFTELCoreMetadataModel metadata, string serviceName, int statusCode = (int)HttpStatusCode.InternalServerError, ResultFTELCoreErrorModel error = null)
+            => new Result
+            {
+                Code = statusCode,
+                Success = false,
+                Dispatched = false,
+                Messages = [message],
+                System = serviceName,
+                Status = statusCode.ConvertHttpStatusCodeCodeByName(),
+                Meta = metadata,
+                Error = error ?? _errorSystemDefault
+            };
     }
 
     public class Result<T> : Result, IResult<T>
     {
+        [JsonPropertyName("data")]
         public T Data { get; set; }
 
         public Result()
         {
         }
 
+        private static readonly CatalogsErorrCodeModel _catalogsBadRequest =
+            ResponseWrapperByCodeMapper.FromStatusCode(
+                statusCode: HttpStatusCode.BadRequest, sourceType: ErrorSourceType.General);
+
+        private static readonly ResultFTELCoreErrorModel _failLogicDefault =
+            new()
+            {
+                Code = _catalogsBadRequest.Code,
+                Retryable = _catalogsBadRequest.Retryable
+            };
+
         #region ::::::::::::: FAIL :::::::::::::
 
-        public new static Result<T> Fail(int statusCode = (int)HttpStatusCode.BadRequest, bool succeeded = true)
-            => new()
-            { Succeeded = succeeded, Code = statusCode, Status = statusCode.ConvertHttpStatusCodeCodeByName() };
-
-        public new static Result<T> Fail(string message = "Thực hiện yêu cầu không thành công !", bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => new()
+        public new static Result<T> Fail(
+            string message = "Thực hiện yêu cầu không thành công", bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => new Result<T>()
             {
                 Code = statusCode,
                 Messages = [message],
-                Succeeded = succeeded,
-                Status = statusCode.ConvertHttpStatusCodeCodeByName()
+                Success = succeeded,
+                Dispatched = true,
+                Status = statusCode.ConvertHttpStatusCodeCodeByName(),
+                Error = error ?? _failLogicDefault
             };
 
-        public new static Result<T> Fail(List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => new()
+        public new static Result<T> Fail(List<string> messages, bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => new Result<T>
             {
                 Code = statusCode,
                 Messages = messages,
-                Succeeded = succeeded,
-                Status = statusCode.ConvertHttpStatusCodeCodeByName()
+                Success = succeeded,
+                Dispatched = true,
+                Status = statusCode.ConvertHttpStatusCodeCodeByName(),
+                Error = error ?? _failLogicDefault
             };
 
-        public static Result<T> Fail(T data, string message = "Thực hiện yêu cầu không thành công !", bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => new()
+        public static Result<T> Fail(
+            T data, string message = "Thực hiện yêu cầu không thành công", bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => new Result<T>
             {
                 Data = data,
                 Code = statusCode,
                 Messages = [message],
-                Succeeded = succeeded,
-                Status = statusCode.ConvertHttpStatusCodeCodeByName()
+                Success = succeeded,
+                Dispatched = true,
+                Status = statusCode.ConvertHttpStatusCodeCodeByName(),
+                Error = error ?? _failLogicDefault
             };
 
-        public static Result<T> Fail(T data, List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => new()
+        public static Result<T> Fail(
+            T data, List<string> messages, bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => new Result<T>
             {
                 Data = data,
                 Code = statusCode,
                 Messages = messages,
-                Succeeded = succeeded,
-                Status = statusCode.ConvertHttpStatusCodeCodeByName()
+                Success = succeeded,
+                Dispatched = true,
+                Status = statusCode.ConvertHttpStatusCodeCodeByName(),
+                Error = error ?? _failLogicDefault
             };
 
-        public new static Task<Result<T>> FailAsync(int statusCode = (int)HttpStatusCode.OK, bool succeeded = true)
-            => Task.FromResult(Fail(statusCode, succeeded));
+        public new static Task<Result<T>> FailAsync(
+            string message = "Thực hiện yêu cầu không thành công", bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => Task.FromResult(Fail(message: message, succeeded: succeeded, statusCode: statusCode, error: error));
 
-        public new static Task<Result<T>> FailAsync(string message = "Thực hiện yêu cầu không thành công !", bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => Task.FromResult(Fail(message, succeeded, statusCode));
+        public new static Task<Result<T>> FailAsync(
+            List<string> messages, bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => Task.FromResult(Fail(messages: messages, succeeded: succeeded, statusCode: statusCode, error: error));
 
-        public new static Task<Result<T>> FailAsync(List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => Task.FromResult(Fail(messages, succeeded, statusCode));
+        public static Task<Result<T>> FailAsync(
+            T data, string message = "Thực hiện yêu cầu không thành công", bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => Task.FromResult(Fail(data: data, message: message, succeeded: succeeded, statusCode: statusCode, error: error));
 
-        public static Task<Result<T>> FailAsync(T data, string message = "Thực hiện yêu cầu không thành công !", bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => Task.FromResult(Fail(data, message, succeeded, statusCode));
-
-        public static Task<Result<T>> FailAsync(T data, List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest)
-            => Task.FromResult(Fail(data, messages, succeeded, statusCode));
+        public static Task<Result<T>> FailAsync(
+            T data, List<string> messages, bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTELCoreErrorModel error = null)
+            => Task.FromResult(Fail(data: data, messages: messages, succeeded: succeeded, statusCode: statusCode, error: error));
 
         #endregion ::::::::::::: FAIL :::::::::::::
 
         #region ::::::::::::: SUCCESS :::::::::::::
 
-        public new static Result<T> Success(int statusCode = (int)HttpStatusCode.OK)
-            => new()
-            { Succeeded = true, Code = statusCode, Status = statusCode.ConvertHttpStatusCodeCodeByName() };
-
-        public new static Result<T> Success(string message = "Thực hiện yêu cầu thành công !", int statusCode = (int)HttpStatusCode.OK)
-            => new()
+        public static Result<T> Succeed(
+            string message = "Thực hiện yêu cầu thành công", bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+            => new Result<T>
             {
-                Succeeded = true,
+                Success = succeeded,
+                Dispatched = true,
+
                 Code = statusCode,
                 Messages = [message],
                 Status = statusCode.ConvertHttpStatusCodeCodeByName()
             };
 
-        public new static Result<T> Success(List<string> messages, int statusCode = (int)HttpStatusCode.OK)
-            => new()
+        public static Result<T> Succeed(
+            List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+            => new Result<T>
             {
-                Succeeded = true,
+                Success = succeeded,
+                Dispatched = true,
+
                 Code = statusCode,
                 Messages = messages,
                 Status = statusCode.ConvertHttpStatusCodeCodeByName()
             };
 
-        public static Result<T> Success(T data, string message = "Thực hiện yêu cầu thành công !", int statusCode = (int)HttpStatusCode.OK)
-          => new()
+        public static Result<T> Succeed(
+            T data, string message = "Thực hiện yêu cầu thành công", bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+          => new Result<T>
           {
               Data = data,
-              Succeeded = true,
+              Success = succeeded,
+              Dispatched = true,
               Code = statusCode,
               Messages = [message],
               Status = statusCode.ConvertHttpStatusCodeCodeByName()
           };
 
-        public static Result<T> Success(T data, List<string> messages, int statusCode = (int)HttpStatusCode.OK)
-            => new()
+        public static Result<T> Succeed(
+           T data, List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+            => new Result<T>
             {
                 Data = data,
-                Succeeded = true,
+                Success = succeeded,
+                Dispatched = true,
                 Code = statusCode,
                 Messages = messages,
                 Status = statusCode.ConvertHttpStatusCodeCodeByName()
             };
 
-        public new static Task<Result<T>> SuccessAsync(int statusCode = (int)HttpStatusCode.OK)
-            => Task.FromResult(Success(statusCode));
+        public static Task<Result<T>> SucceedAsync(
+            string message = "Thực hiện yêu cầu thành công", bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+            => Task.FromResult(Succeed(message, succeeded, statusCode));
 
-        public new static Task<Result<T>> SuccessAsync(string message = "Thực hiện yêu cầu thành công !", int statusCode = (int)HttpStatusCode.OK)
-            => Task.FromResult(Success(message, statusCode));
+        public static Task<Result<T>> SucceedAsync(
+            List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+            => Task.FromResult(Succeed(messages, succeeded, statusCode));
 
-        public new static Task<Result<T>> SuccessAsync(List<string> messages, int statusCode = (int)HttpStatusCode.OK)
-            => Task.FromResult(Success(messages, statusCode));
+        public static Task<Result<T>> SucceedAsync(
+            T data, string message = "Thực hiện yêu cầu thành công", bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+            => Task.FromResult(Succeed(data, message, succeeded, statusCode));
 
-        public static Task<Result<T>> SuccessAsync(T data, string message = "Thực hiện yêu cầu thành công !", int statusCode = (int)HttpStatusCode.OK)
-            => Task.FromResult(Success(data, message, statusCode));
-
-        public static Task<Result<T>> SuccessAsync(T data, List<string> messages, int statusCode = (int)HttpStatusCode.OK)
-            => Task.FromResult(Success(data, messages, statusCode));
+        public static Task<Result<T>> SucceedAsync(
+            T data, List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.OK)
+            => Task.FromResult(Succeed(data, messages, succeeded, statusCode));
 
         #endregion ::::::::::::: SUCCESS :::::::::::::
     }

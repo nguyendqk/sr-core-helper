@@ -36,9 +36,10 @@
 	</ItemGroup>
 
 	<Target Name="CopyToOtherLibs" AfterTargets="Build">
-		<ItemGroup>
+		<!--<ItemGroup>
 			<FilesToCopy Include="$(OutputPath)**\*" />
-		</ItemGroup>
+		</ItemGroup>-->
+		<Copy SourceFiles="@(FilesToCopy)" DestinationFolder="..\..\sr-hub-api\Libs\" />
 		<!--<Copy SourceFiles="@(FilesToCopy)" DestinationFolder="..\..\sr-hub-api\Libs\" />
 		<Copy SourceFiles="@(FilesToCopy)" DestinationFolder="..\..\sr-request-api\Libs\" />
 		<Copy SourceFiles="@(FilesToCopy)" DestinationFolder="..\..\sr-workflow-api\Libs\" />

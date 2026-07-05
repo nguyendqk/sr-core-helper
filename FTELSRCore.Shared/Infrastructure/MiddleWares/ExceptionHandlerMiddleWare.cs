@@ -1,55 +1,54 @@
-﻿using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
+﻿using FTELSRCore.Infrastructure.MiddleWares.Helpers;
+using FTELSRCore.Wrappers.ErrorCodes;
+using FTELSRCore.Wrappers.ErrorCodes.Catalogs;
+using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Net.Mime;
 using System.Text;
 
 namespace FTELSRCore.Infrastructure.MiddleWares
 {
-    public class ExceptionHandlerMiddleWare(RequestDelegate next, ILogger<ExceptionHandlerMiddleWare> logger)
+    public class ExceptionHandlerMiddleWare(RequestDelegate _next, ILogger<ExceptionHandlerMiddleWare> logger, ExceptionHandlerMiddleWareModel middleWareModel)
     {
-        private const long MaxSizeContent = 5 * 1024 * 1024; // 5MB là model tối da log dữ liệu.
-
-        public async Task Invoke(HttpContext context)
+        public async Task Invoke(HttpContext httpContext)
         {
-            string requestForUser = await GetRequestForUserWithFromBody(context);
-
-            if (!string.IsNullOrWhiteSpace(requestForUser))
-            {
-                context.Request.Body.Position = 0;
-            }
-
             try
             {
-                await next(context);
+                await _next(httpContext);
             }
             catch (Exception exception)
             {
-                StringBuilder message = new($"Method: {context.Request.Method.ToUpper()} | Path: {context.Request.Path} {Environment.NewLine}");
+                StringBuilder message = new($"Method: {httpContext.Request.Method.ToUpper()} | Path: {httpContext.Request.Path} {Environment.NewLine}");
 
-                if (!string.IsNullOrWhiteSpace(context?.Request?.QueryString.Value))
+                if (!string.IsNullOrWhiteSpace(httpContext?.Request?.QueryString.Value))
                 {
-                    message.AppendLine($"[QueryString]: {context?.Request?.QueryString}");
+                    message.AppendLine($"[QueryString]: {httpContext?.Request?.QueryString}");
                 }
 
-                if (!string.IsNullOrWhiteSpace(requestForUser))
+                string requestBody = await ReadRequestBodyHelper.ReadAsync(httpContext);
+
+                if (!string.IsNullOrWhiteSpace(requestBody))
                 {
-                    message.AppendLine($"[RequestBody]: {JsonConvert.SerializeObject(requestForUser)}");
+                    message.AppendLine($"[RequestBody]: {requestBody}");
                 }
 
                 logger.ErrorException(nameof(ExceptionHandlerMiddleWare), nameof(Invoke), e: exception, message: message.ToString());
 
-                HttpResponse response = context.Response;
-
-                if (context.Response.HasStarted)
+                if (httpContext.Response.HasStarted)
                 {
                     return;
                 }
 
+                HttpResponse response = httpContext.Response;
+
                 response.ContentType = MediaTypeNames.Application.Json;
 
-                Result responseModel = Result.FailSystem(message: exception.Message,
-                                                         statusCode: (int)HttpStatusCode.InternalServerError);
+                Result responseModel =
+                    Result.FailSystem(
+                        message: exception.Message,
+                        statusCode: (int)HttpStatusCode.InternalServerError,
+                        metadata: BuildMetaHelper.Build(httpContext: httpContext),
+                        serviceName: middleWareModel.ServiceName ?? CommonBaseConstant.System);
 
                 switch (exception)
                 {
@@ -83,43 +82,32 @@ namespace FTELSRCore.Infrastructure.MiddleWares
                         }
                 }
 
+                CatalogsErorrCodeModel wrapperByCode =
+                    ResponseWrapperByCodeMapper.FromStatusCode(
+                        statusCode: (HttpStatusCode)responseModel.Code, sourceType: ErrorSourceType.General);
+
+                responseModel.Error = new ResultFTELCoreErrorModel
+                {
+                    Code = wrapperByCode.Code,
+                    Retryable = wrapperByCode.Retryable,
+                };
+
                 responseModel.Messages = EnvironmentExtensions.GetEnvironment() switch
                 {
                     EnvironmentExtensions.EProd or EnvironmentExtensions.EStag =>
                     [
-                        "Có sự cố xảy ra vui lòng thử lại sau !"
+                        "Có sự cố xảy ra vui lòng thử lại sau"
                     ],
                     _ => responseModel.Messages
                 };
 
-                await response.WriteAsync(responseModel.ToJSon());
+                await response.WriteAsJsonAsync(responseModel);
             }
         }
+    }
 
-        private static async Task<string> GetRequestForUserWithFromBody(HttpContext context)
-        {
-            try
-            {
-                if (context.Response.HasStarted)
-                {
-                    return string.Empty;
-                }
-
-                if (context.Request.ContentLength > MaxSizeContent)
-                {
-                    return "Body to large";
-                }
-
-                context.Request.EnableBuffering();
-
-                using StreamReader reader = new(context.Request.Body, leaveOpen: true);
-
-                return await reader.ReadToEndAsync();
-            }
-            catch
-            {
-                return string.Empty;
-            }
-        }
+    public record ExceptionHandlerMiddleWareModel
+    {
+        public string ServiceName { get; set; }
     }
 }

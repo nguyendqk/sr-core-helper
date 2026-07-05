@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Net;
 using System.Reflection;
@@ -44,11 +43,81 @@ namespace FTELSRCore.Helpers
         }
 
         /// <summary>
+        /// Lấy danh sách IP của người dùng
+        /// </summary>
+        /// <param name="httpContext"></param>
+        /// <returns></returns>
+        /// 
+        public static string GetClientIpAddress(HttpContext httpContext)
+        {
+            try
+            {
+                if (httpContext == null)
+                {
+                    return string.Empty;
+                }
+
+                // 1. RFC 7239
+                if (httpContext.Request.Headers.TryGetValue("Forwarded", out var forwarded))
+                {
+                    var value = forwarded.ToString();
+
+                    // Ví dụ: for=113.161.10.20;proto=https
+                    var forPart = value.Split(',')
+                                       .Select(x => x.Trim())
+                                       .FirstOrDefault(x => x.StartsWith("for=", StringComparison.OrdinalIgnoreCase));
+
+                    if (!string.IsNullOrWhiteSpace(forPart))
+                    {
+                        var ip = forPart.Substring(4).Trim('"', '[', ']');
+
+                        if (IPAddress.TryParse(ip, out _))
+                        {
+                            return ip;
+                        }
+                    }
+                }
+
+                // 2. X-Forwarded-For
+                if (httpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var xff))
+                {
+                    var ip = xff.ToString()
+                                .Split(',')
+                                .FirstOrDefault()?
+                                .Trim();
+
+                    if (IPAddress.TryParse(ip, out _))
+                    {
+                        return ip;
+                    }
+                }
+
+                // 3. X-Real-IP
+                if (httpContext.Request.Headers.TryGetValue("X-Real-IP", out var realIp))
+                {
+                    var ip = realIp.ToString();
+
+                    if (IPAddress.TryParse(ip, out _))
+                    {
+                        return ip;
+                    }
+                }
+
+                // 4. Remote IP
+                return string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Hàm xử lý che số điện thạoi
         /// </summary>
         /// <param name="phoneNumber"></param>
         /// <returns></returns>
-        /// 
+        ///
         public static string MaskPhoneNumber(string phoneNumber)
         {
             if (string.IsNullOrWhiteSpace(phoneNumber)
@@ -325,7 +394,7 @@ namespace FTELSRCore.Helpers
         /// <param name="dateInput">Chuỗi ngày cần parse.</param>
         /// <param name="format">Format cụ thể; null thì dùng AllDateFormats.</param>
         /// <returns>DateTime nếu parse được, ngược lại null.</returns>
-        /// 
+        ///
         public static DateTime? ConvertStringToDateTime(this string dateInput,
             string format = null,
             IFormatProvider provider = null,

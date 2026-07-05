@@ -1,5 +1,6 @@
 ﻿using Serilog.Events;
 using Serilog.Formatting;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -20,11 +21,15 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
         {
             LogTemplateModel logTemplate = new()
             {
+                SpanId = logEvent.SpanId,
+
+                TraceId = logEvent.TraceId,
+
                 Level = logEvent.Level.ToString(),
 
                 Message = logEvent.RenderMessage(),
 
-                TimeStampFormat = logEvent.Timestamp.ToString("dd/MM/yyyy HH:mm:ss.fff"),
+                LocalTimeStamp = logEvent.Timestamp.ToString("dd-MM-yyyy HH:mm:ss.fff"),
 
                 ActionId = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.ActionIdPropertyName),
 
@@ -36,17 +41,15 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
 
                 CorrelationId = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.CorrelationIdPropertyName),
 
-                EnvironmentName = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.EnvironmentNamePropertyName),
+                Environment = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.EnvironmentNamePropertyName),
 
                 EventId = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.EventIdNamePropertyName),
 
-                MachineName = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.MachineNamePropertyName),
+                Pod = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.MachineNamePropertyName),
 
                 MethodName = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.MethodNamePropertyName),
 
                 Parameters = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.ParametersPropertyName),
-
-                RequestId = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.RequestIdPropertyName),
 
                 RequestName = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.RequestNamePropertyName),
 
@@ -58,33 +61,42 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
 
                 User = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.UserPropertyName),
 
+                IPAddress = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.ForwardedPropertyName),
+
                 UserInfo = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.UserInfoPropertyName),
 
                 UserAgent = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.UserAgentPropertyName),
 
                 DynamicRule = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.DynamicRule),
 
-                XCorrelationId = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.x_correlation_idPropertyName),
+                RequestId = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.RequestIdPropertyName),
+
+                Topic = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.TopicPropertyName),
+
+                StackTrace = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.StackTracePropertyName),
+
+                ErrorMessage = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.ErrorMessagePropertyName),
+
+                ErrorCategory = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.ErrorCategoryPropertyName),
 
                 #region ::::::::::::: Dùng cho kiểm tra kết nối API :::::::::::::
 
-                Uri = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.Uri),
+                Endpoint = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.EndpointPropertyName),
 
-                Latency = long.TryParse(GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.Latency), out var latency) ? latency : 0,
+                Direction = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.DirectionPropertyName),
 
-                StatusCode = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.StatusCode),
+                HttpMethod = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.HttpMethodPropertyName),
 
-                LatencyRating = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.LatencyRating)
+                SystemOwner = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.SystemOwnerPropertyName),
+
+                HttpStatusCode = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.HttpStatusCodePropertyName),
+
+                LatencyRating = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.LatencyRatingPropertyName),
+
+                ResponseTimeMs = long.TryParse(GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.ResponseTimeMsPropertyName), out var latency) ? latency : 0,
 
                 #endregion ::::::::::::: Dùng cho kiểm tra kết nối API :::::::::::::
             };
-
-            if ((string.IsNullOrWhiteSpace(logTemplate.XCorrelationId)
-                || logTemplate.XCorrelationId.Equals(CommonBaseConstant.Anonymous, StringComparison.OrdinalIgnoreCase))
-                && !string.IsNullOrWhiteSpace(logTemplate.CorrelationId))
-            {
-                logTemplate.XCorrelationId = logTemplate.CorrelationId;
-            }
 
             output.Write(JsonSerializer.Serialize(value: logTemplate, options: _jsonSerializerOptions));
         }
@@ -95,7 +107,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
 
             public string Message { get; set; }
 
-            public string TimeStampFormat { get; set; }
+            public string LocalTimeStamp { get; set; }
 
             /// <summary>
             /// Mã định danh của Action.
@@ -131,7 +143,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
             /// Tên môi trường đang chạy (Local, Staging, Production).
             /// </summary>
             ///
-            public string EnvironmentName { get; set; }
+            public string Environment { get; set; }
 
             /// <summary>
             /// Thông tin về EventId.
@@ -143,7 +155,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
             /// Tên của máy chủ thực hiện request.
             /// </summary>
             ///
-            public string MachineName { get; set; }
+            public string Pod { get; set; }
 
             /// <summary>
             /// Tên của phương thức đang thực thi.
@@ -196,13 +208,17 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
             /// Mã correlation ID được truyền theo request.
             /// </summary>
             ///
-            public string XCorrelationId { get; set; }
+            public ActivityTraceId? TraceId { get; set; }
+
+            public ActivitySpanId? SpanId { get; set; }
 
             /// <summary>
             /// Nhân sự thao tác
             /// </summary>
             ///
             public string User { get; set; }
+
+            public string IPAddress { get; set; }
 
             /// <summary>
             /// User agent của client thực hiện request.
@@ -216,30 +232,91 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
             ///
             public string DynamicRule { get; set; }
 
+            public string ErrorCategory { get; set; }
+
+            #region ::::::::::::: Dùng cho kiểm tra kết nối API :::::::::::::
+
             /// <summary>
             /// Thông tin đường dẫn API.
             /// </summary>
             ///
-            public string Uri { get; set; }
+            public string Endpoint { get; set; }
+
+            /// <summary>
+            /// Thông tin HTTP Method.
+            /// </summary>
+            ///
+            public string HttpMethod { get; set; }
 
             /// <summary>
             /// Thời gian xử lý của API
             /// </summary>
-            /// 
+            ///
             [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
-            public long Latency { get; set; }
+            public long ResponseTimeMs { get; set; }
+
+            /// <summary>
+            /// Kích thước request body (bytes)
+            /// </summary>
+            [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
+            public long RequestSize { get; set; }
+
+            /// <summary>
+            /// Kích thước response body (bytes)
+            /// </summary>
+            ///
+            [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
+            public long ResponseSize { get; set; }
 
             /// <summary>
             /// Tình trạng xử lý của API
             /// </summary>
             ///
-            public string StatusCode { get; set; }
+            public string HttpStatusCode { get; set; }
+
+            /// <summary>
+            /// Hệ thống xử quản lý
+            /// </summary>
+            ///
+            public string SystemOwner { get; set; }
+
+            /// <summary>
+            /// Gọi nội bộ hay gọi sang 1 hệ thống khác
+            /// </summary>
+            ///
+            public string Direction { get; set; } = nameof(DirectionType.Inbound);
+
+            #endregion ::::::::::::: Dùng cho kiểm tra kết nối API :::::::::::::
 
             /// <summary>
             /// Đánh giá xem thời gian xử lý là như nào.
             /// </summary>
             ///
             public string LatencyRating { get; set; }
+
+            public string Topic { get; set; }
+
+            #region :::::::::::::::::::::::::::::::: Error ::::::::::::::::::::::::::::::::
+
+            /// <summary>
+            /// Chi tiết lỗi (không chứa PII)
+            /// </summary>
+            ///
+            public string ErrorMessage { get; set; }
+
+            /// <summary>
+            /// Stack trace
+            /// </summary>
+            ///
+            public string StackTrace { get; set; }
+
+            #endregion :::::::::::::::::::::::::::::::: Error ::::::::::::::::::::::::::::::::
+        }
+
+        public enum DirectionType
+        {
+            Outbound = 0,
+            Inbound = 1,
         }
 
         /// <summary>

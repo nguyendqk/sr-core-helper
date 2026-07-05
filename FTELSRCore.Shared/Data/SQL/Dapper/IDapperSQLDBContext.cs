@@ -15,7 +15,7 @@ namespace FTELSRCore.Data.SQL.Dapper
         /// <param name="cancellationToken"></param>
         /// <returns> Trả về `true` nếu câu lệnh SQL thực thi thành công (có thay đổi dữ liệu), ngược lại trả về `false`. </returns>
         ///
-        Task<bool> IsSAPAsync(
+        Task<bool> ExecuteNonQueryAsync(
             string pSqlQuery, DynamicParameters pParams, int commandTimeout = 30, CommandType commandType = CommandType.Text, CancellationToken cancellationToken = default);
 
         /// <summary>

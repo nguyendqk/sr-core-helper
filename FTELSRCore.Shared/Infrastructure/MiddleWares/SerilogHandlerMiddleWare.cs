@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace FTELSRCore.Infrastructure.MiddleWares
 {
-    public class SerilogHandlerMiddleWare(RequestDelegate next, string serviceName)
+    public class SerilogHandlerMiddleWare(RequestDelegate next, SerilogHandlerMiddleWareModel middleWareModel)
     {
         public async Task InvokeAsync(HttpContext context)
         {
@@ -20,7 +20,24 @@ namespace FTELSRCore.Infrastructure.MiddleWares
             }
             else
             {
-                context.Request.Headers[HeaderConstant.UserAgentHeaderKey] = serviceName ?? CommonBaseConstant.Anonymous;
+                context.Request.Headers[HeaderConstant.UserAgentHeaderKey] =
+                    !string.IsNullOrWhiteSpace(middleWareModel?.ServiceName)
+                    ? middleWareModel.ServiceName : CommonBaseConstant.Anonymous;
+            }
+
+            string ipAddress = string.Empty;
+
+            string getIPAddress = ConvertHelpers.GetClientIpAddress(context);
+
+            if (!string.IsNullOrWhiteSpace(getIPAddress))
+            {
+                ipAddress = getIPAddress;
+            }
+            else
+            {
+                ipAddress = context.Connection.RemoteIpAddress?.ToString();
+
+                context.Request.Headers[HeaderConstant.ForwardedHeaderKey] = ipAddress;
             }
 
             //string permissionsName = CommonBaseConstant.Anonymous;
@@ -55,6 +72,7 @@ namespace FTELSRCore.Infrastructure.MiddleWares
 
             ILogEventEnricher[] enrichers =
             [
+                new PropertyEnricher(SerilogConstant.ForwardedPropertyName, ipAddress),
                 new PropertyEnricher(SerilogConstant.UserPropertyName, username ?? CommonBaseConstant.Anonymous),
                 new PropertyEnricher(SerilogConstant.UserAgentPropertyName, userAgent ?? CommonBaseConstant.Anonymous),
                 new PropertyEnricher(SerilogConstant.UserInfoPropertyName , $"[User: {username} - Roles: {roleName} - RoleData: {roleDataName}]")
@@ -70,5 +88,10 @@ namespace FTELSRCore.Infrastructure.MiddleWares
                 await next(context);
             }
         }
+    }
+
+    public class SerilogHandlerMiddleWareModel
+    {
+        public string ServiceName { get; set; }
     }
 }

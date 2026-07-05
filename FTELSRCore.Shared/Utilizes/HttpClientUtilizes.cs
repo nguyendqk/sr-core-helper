@@ -32,6 +32,21 @@ namespace FTELSRCore.Utilizes
 
     public static class HttpClientUtilizes
     {
+        public static bool HasPort(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return false;
+            }
+
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            return !uri.IsDefaultPort;
+        }
+
         public static HttpOptionModel GetUri(this FormatOptions option, string requestUri, HttpClient httpClient, string token = "")
         {
             var uriBuilder = new UriBuilder
@@ -124,6 +139,7 @@ namespace FTELSRCore.Utilizes
                 case true:
                     {
                         logger.HttpResult(className, methodName, message);
+
                         break;
                     }
                 case false:

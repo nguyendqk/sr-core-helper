@@ -111,7 +111,7 @@ namespace FTELSRCore.Caches
             }
             catch (Exception exception)
             {
-                logger.ConnectionError(nameof(CoreCacheExtension), nameof(GetOrCreateAsync), e: exception, message: $"key: {key}");
+                logger.ConnectionErrorRedis(nameof(CoreCacheExtension), nameof(GetOrCreateAsync), e: exception, message: $"key: {key}");
 
                 return null;
             }
@@ -248,7 +248,7 @@ namespace FTELSRCore.Caches
             }
             catch (Exception exception)
             {
-                logger.ConnectionError(nameof(CoreCacheExtension), nameof(GetCacheByKeyAsync), e: exception, message: $"key: {key}");
+                logger.ConnectionErrorRedis(nameof(CoreCacheExtension), nameof(GetCacheByKeyAsync), e: exception, message: $"key: {key}");
 
                 return string.Empty;
             }
@@ -333,7 +333,7 @@ namespace FTELSRCore.Caches
             }
             catch (Exception exception)
             {
-                logger.ConnectionError(nameof(CoreCacheExtension), nameof(SetCacheByKeyAsync), e: exception, message: $"key: {key}");
+                logger.ConnectionErrorRedis(nameof(CoreCacheExtension), nameof(SetCacheByKeyAsync), e: exception, message: $"key: {key}");
             }
         }
 
@@ -408,7 +408,7 @@ namespace FTELSRCore.Caches
             }
             catch (Exception exception)
             {
-                logger.ConnectionError(nameof(CoreCacheExtension), nameof(SetCacheByKeyAsync), e: exception, message: $"key: {key}");
+                logger.ConnectionErrorRedis(nameof(CoreCacheExtension), nameof(SetCacheByKeyAsync), e: exception, message: $"key: {key}");
             }
         }
 
@@ -450,7 +450,7 @@ namespace FTELSRCore.Caches
             }
             catch (Exception exception)
             {
-                logger.ConnectionError(nameof(CoreCacheExtension), nameof(ClearAllCacheAsync), e: exception, message: $"keys: {string.Join(", ", keys)}");
+                logger.ConnectionErrorRedis(nameof(CoreCacheExtension), nameof(ClearAllCacheAsync), e: exception, message: $"keys: {string.Join(", ", keys)}");
             }
         }
 
@@ -488,7 +488,7 @@ namespace FTELSRCore.Caches
             }
             catch (Exception exception)
             {
-                logger.ConnectionError(nameof(CoreCacheExtension), nameof(ClearCacheAsync), e: exception, message: $"key: {key}");
+                logger.ConnectionErrorRedis(nameof(CoreCacheExtension), nameof(ClearCacheAsync), e: exception, message: $"key: {key}");
             }
         }
 
@@ -504,7 +504,7 @@ namespace FTELSRCore.Caches
         ///
         private static bool IsFailSafeEnabled(TimeSpan durationTime)
         {
-            return (durationTime > TimeSpan.FromMinutes(15)) is false;
+            return durationTime >= TimeSpan.FromMinutes(15);
         }
 
         /// <summary>

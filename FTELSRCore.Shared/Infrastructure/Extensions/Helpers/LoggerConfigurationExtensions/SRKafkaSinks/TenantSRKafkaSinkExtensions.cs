@@ -93,7 +93,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
 
                         message = new Message<string, byte[]>
                         {
-                            Key = ((int)logEventLevel).ToString(),
+                            Key = null,
                             Value = Encoding.UTF8.GetBytes(stringWriter.ToString())
                         };
                     }

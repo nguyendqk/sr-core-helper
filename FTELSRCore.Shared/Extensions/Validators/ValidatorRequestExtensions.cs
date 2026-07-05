@@ -1,6 +1,4 @@
-﻿// Ignore Spelling: Validator
-
-using FluentValidation;
+﻿using FluentValidation;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using static FTELSRCore.Helpers.ConvertHelpers;

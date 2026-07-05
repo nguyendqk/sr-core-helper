@@ -1,6 +1,4 @@
-﻿// Ignore Spelling: SQL
-
-using Dapper;
+﻿using Dapper;
 using FTELSRCore.Data.SQL.DbContexts.Read;
 using FTELSRCore.Data.SQL.DbContexts.Write;
 using System.Data;
@@ -77,13 +75,13 @@ namespace FTELSRCore.Data.SQL.Core
         /// <param name="cancellationToken">Token hủy bỏ thao tác (tuỳ chọn).</param>
         /// <returns>True nếu câu lệnh SQL thực thi thành công (với kết quả > 0), ngược lại là false.</returns>
         ///
-        Task<bool> IsSAPWithScalarScriptAsync(string scriptSQLQuery,
-                                              DbConnection context,
-                                              DbTransaction transaction,
-                                              DynamicParameters parameters,
-                                              int commandTimeout = 30,
-                                              CommandType commandType = CommandType.Text,
-                                              CancellationToken cancellationToken = default);
+        Task<bool> IsExecuteNonQueryAsync(string scriptSQLQuery,
+                                          DbConnection context,
+                                          DbTransaction transaction,
+                                          DynamicParameters parameters,
+                                          int commandTimeout = 30,
+                                          CommandType commandType = CommandType.Text,
+                                          CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm một thực thể theo ID.
@@ -104,7 +102,9 @@ namespace FTELSRCore.Data.SQL.Core
         /// <returns>Đối tượng DTO của thực thể đầu tiên thỏa mãn bộ lọc và trạng thái "isDeleted", hoặc giá trị mặc định nếu không tìm thấy.</returns>
         ///
         Task<TDto> FindOneSortDeletedAsync<TDto>(
-            Expression<Func<TEntity, bool>>[] filters, bool isDeleted = false, CancellationToken cancellationToken = default);
+            Expression<Func<TEntity, bool>>[] filters,
+            bool isDeleted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm một thực thể đầu tiên thỏa mãn các bộ lọc và trạng thái "isDeleted" đã chỉ định.
@@ -115,7 +115,9 @@ namespace FTELSRCore.Data.SQL.Core
         /// <returns>Thực thể đầu tiên thỏa mãn bộ lọc và trạng thái "isDeleted", hoặc giá trị mặc định nếu không tìm thấy.</returns>
         ///
         Task<TEntity> FindOneSortDeletedAsync(
-            Expression<Func<TEntity, bool>>[] filters, bool isDeleted = false, CancellationToken cancellationToken = default);
+            Expression<Func<TEntity, bool>>[] filters,
+            bool isDeleted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm một thực thể đầu tiên thỏa mãn các bộ lọc đã chỉ định và chuyển đổi nó sang kiểu dữ liệu DTO.
@@ -126,7 +128,8 @@ namespace FTELSRCore.Data.SQL.Core
         /// <returns>DTO của thực thể đầu tiên thỏa mãn bộ lọc, hoặc giá trị mặc định nếu không tìm thấy.</returns>
         ///
         Task<TDto> FindOneAsync<TDto>(
-            Expression<Func<TEntity, bool>>[] filters, CancellationToken cancellationToken = default);
+            Expression<Func<TEntity, bool>>[] filters,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm một thực thể đầu tiên thỏa mãn các bộ lọc đã chỉ định.
@@ -136,7 +139,8 @@ namespace FTELSRCore.Data.SQL.Core
         /// <returns>Thực thể đầu tiên thỏa mãn bộ lọc, hoặc null nếu không tìm thấy.</returns>
         ///
         Task<TEntity> FindOneAsync(
-            Expression<Func<TEntity, bool>>[] filters, CancellationToken cancellationToken = default);
+            Expression<Func<TEntity, bool>>[] filters,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm tất cả các thực thể trong cơ sở dữ liệu thỏa mãn các bộ lọc đã chỉ định và có trạng thái xóa xác định, và chuyển đổi chúng thành kiểu DTO.
@@ -148,7 +152,9 @@ namespace FTELSRCore.Data.SQL.Core
         /// <returns>Danh sách các đối tượng DTO thỏa mãn bộ lọc và trạng thái xóa.</returns>
         ///
         Task<List<TDto>> FindAllSortDeletedAsync<TDto>(
-            Expression<Func<TEntity, bool>>[] filters, bool isDeleted = false, CancellationToken cancellationToken = default);
+            Expression<Func<TEntity, bool>>[] filters,
+            bool isDeleted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm tất cả các thực thể trong cơ sở dữ liệu thỏa mãn các bộ lọc đã chỉ định và có trạng thái xóa xác định.
@@ -159,7 +165,9 @@ namespace FTELSRCore.Data.SQL.Core
         /// <returns>Danh sách các thực thể thỏa mãn bộ lọc và trạng thái xóa.</returns>
         ///
         Task<List<TEntity>> FindAllSortDeletedAsync(
-            Expression<Func<TEntity, bool>>[] filters, bool isDeleted = false, CancellationToken cancellationToken = default);
+            Expression<Func<TEntity, bool>>[] filters,
+            bool isDeleted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm tất cả các thực thể trong cơ sở dữ liệu thỏa mãn các bộ lọc đã chỉ định và chuyển đổi chúng thành kiểu DTO.
@@ -170,7 +178,8 @@ namespace FTELSRCore.Data.SQL.Core
         /// <returns>Danh sách các đối tượng DTO thỏa mãn bộ lọc.</returns>
         ///
         Task<List<TDto>> FindAllAsync<TDto>(
-            Expression<Func<TEntity, bool>>[] filters, CancellationToken cancellationToken = default);
+            Expression<Func<TEntity, bool>>[] filters,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm tất cả các thực thể trong cơ sở dữ liệu thỏa mãn các bộ lọc đã chỉ định.
@@ -180,7 +189,8 @@ namespace FTELSRCore.Data.SQL.Core
         /// <returns>Danh sách các thực thể thỏa mãn bộ lọc.</returns>
         ///
         Task<List<TEntity>> FindAllAsync(
-            Expression<Func<TEntity, bool>>[] filters, CancellationToken cancellationToken = default);
+            Expression<Func<TEntity, bool>>[] filters,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Thêm một thực thể vào cơ sở dữ liệu.

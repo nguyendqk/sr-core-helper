@@ -34,20 +34,36 @@
 
         public const string UserPropertyName = "User";
 
+        public const string ForwardedPropertyName = "Forwarded";
+
         public const string UserAgentPropertyName = "UserAgent";
 
         public const string SourceContextPropertyName = "SourceContext";
 
         public const string UserInfoPropertyName = "UserInfo";
 
-        public const string x_correlation_idPropertyName = "x-correlation-id";
+        public const string EndpointPropertyName = "Endpoint";
 
-        public const string Uri = "Uri";
+        public const string HttpMethodPropertyName = "HttpMethod";
 
-        public const string Latency = "Latency";
+        public const string ResponseTimeMsPropertyName = "ResponseTimeMs";
 
-        public const string StatusCode = "StatusCode";
+        public const string HttpStatusCodePropertyName = "HttpStatusCode";
 
-        public const string LatencyRating = "LatencyRating";
+        public const string LatencyRatingPropertyName = "LatencyRating";
+
+        public const string DirectionPropertyName = "Direction";
+
+        public const string SystemOwnerPropertyName = "SystemOwner";
+
+        public const string StackTracePropertyName = "StackTrace";
+
+        public const string ErrorMessagePropertyName = "ErrorMessage";
+
+        public const string ErrorCategoryPropertyName = "ErrorCategory";
+
+        public const string ErrorCodePropertyName = "ErrorCode";
+
+        public const string TopicPropertyName = "Topic";
     }
 }
