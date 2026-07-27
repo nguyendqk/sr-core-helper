@@ -72,10 +72,6 @@ namespace FTELSRCore.Caches
 
             try
             {
-                // Dùng GetOrSetAsync (thay vì TryGetAsync + func() + SetAsync thủ công) để tận
-                // dụng cơ chế singleflight có sẵn của FusionCache: khi key hết hạn dưới tải cao,
-                // chỉ 1 request thực sự chạy factory (gọi func gốc), các request đồng thời khác
-                // chờ và dùng chung kết quả — tránh "thundering herd" gọi trùng lặp vào nguồn gốc.
                 string resultString =
                     await fusionCache.GetOrSetAsync<string>(
                         key: key,
@@ -91,7 +87,6 @@ namespace FTELSRCore.Caches
                                 || serialized == "{}"
                                 || serialized == "[]")
                             {
-                                // Không cache giá trị rỗng/miss.
                                 ctx.Options.SkipDistributedCacheWrite = true;
                                 ctx.Options.SkipMemoryCacheWrite = true;
 
