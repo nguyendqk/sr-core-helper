@@ -352,7 +352,7 @@ namespace FTELSRCore.Helpers
                         }
                     case JsonTokenType.Null:
                         {
-                            return 0;
+                            return null;
                         }
                     default:
                         {
@@ -449,7 +449,7 @@ namespace FTELSRCore.Helpers
 
                     case JsonTokenType.Null:
                         {
-                            return 0;
+                            return null;
                         }
                     default:
                         {
@@ -687,7 +687,7 @@ namespace FTELSRCore.Helpers
                                                 ? numberDouble
                                                 : throw new JsonException($"Parse double? fail with data type {nameof(JsonTokenType.String)}."),
 
-                    JsonTokenType.Null => 0,
+                    JsonTokenType.Null => null,
 
                     _ => throw new JsonException("Json double default"),
                 };
@@ -749,7 +749,7 @@ namespace FTELSRCore.Helpers
                         ? numberDecimal
                         : throw new JsonException($"Parse decimal? fail with data type {nameof(JsonTokenType.String)}."),
 
-                    JsonTokenType.Null => 0,
+                    JsonTokenType.Null => null,
 
                     _ => throw new JsonException("Json decimal? default"),
                 };
@@ -778,8 +778,8 @@ namespace FTELSRCore.Helpers
                     JsonTokenType.False => false,
 
                     JsonTokenType.Number =>
-                        reader.TryGetInt32(out var _)
-                        ? true
+                        reader.TryGetInt32(out int numberBool)
+                        ? numberBool != 0
                         : throw new JsonException($"Parse bool fail with data type {nameof(JsonTokenType.Number)}."),
 
                     JsonTokenType.String => reader.GetString() switch
