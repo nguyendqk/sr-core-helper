@@ -217,7 +217,9 @@ namespace FTELSRCore.Caches
                 return string.Empty;
             }
 
-            options ??= CoreCacheHelper.FusionCacheEntryOptionsDefault();
+            options = options is null
+                ? CoreCacheHelper.FusionCacheEntryOptionsDefault().Duplicate()
+                : options.Duplicate();
 
             try
             {
@@ -555,8 +557,9 @@ namespace FTELSRCore.Caches
         private static FusionCacheEntryOptions FusionCacheEntryOptions(
             double expiredMinutes, FusionCacheEntryOptions options = null)
         {
-            options ??=
-                options is null ? CoreCacheHelper.FusionCacheEntryOptionsDefault() : options.Duplicate();
+            options = options is null
+                ? CoreCacheHelper.FusionCacheEntryOptionsDefault().Duplicate()
+                : options.Duplicate();
 
             options.Duration = expiredMinutes <= 0 ? TimeSpan.FromMinutes(5) : TimeSpan.FromMinutes(expiredMinutes);
 
