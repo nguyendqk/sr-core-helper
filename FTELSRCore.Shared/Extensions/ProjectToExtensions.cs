@@ -467,25 +467,10 @@ namespace FTELSRCore.Extensions
 
             string organization = (!string.IsNullOrWhiteSpace(audit?.CreatorInfo?.Organization) ? audit?.CreatorInfo?.Organization : CommonBaseConstant.OrganizationForISC);
 
-            // Lấy danh sách property của entity
-            PropertyInfo[] properties = typeof(TTable).GetProperties();
-
-            // Hàm hỗ trợ gán giá trị nếu property có tồn tại và đang là null
-            void SetPropertyIfNull(string propertyName, object value)
-            {
-                PropertyInfo prop = properties.FirstOrDefault(p => p.Name == propertyName);
-
-                if (prop != null && prop.GetValue(updateDefinition) is null)
-                {
-                    updateDefinition.Set(prop.Name, value);
-                }
-            }
-
-            // Gán giá trị mặc định nếu null
-            SetPropertyIfNull(nameof(EntityFullCreatedAndModifiedBase.ModifiedUser), userName);
-            SetPropertyIfNull(nameof(EntityFullCreatedAndModifiedBase.ModifiedUserCode), userCode);
-            SetPropertyIfNull(nameof(EntityFullCreatedAndModifiedBase.ModifiedUserOrganization), organization);
-            SetPropertyIfNull(nameof(EntityFullCreatedAndModifiedBase.ModifiedDate), CommonBaseConstant.DateTimeUtc());
+            updateDefinition = updateDefinition.Set(nameof(EntityFullCreatedAndModifiedBase.ModifiedUser), userName);
+            updateDefinition = updateDefinition.Set(nameof(EntityFullCreatedAndModifiedBase.ModifiedUserCode), userCode);
+            updateDefinition = updateDefinition.Set(nameof(EntityFullCreatedAndModifiedBase.ModifiedUserOrganization), organization);
+            updateDefinition = updateDefinition.Set(nameof(EntityFullCreatedAndModifiedBase.ModifiedDate), CommonBaseConstant.DateTimeUtc());
 
             return updateDefinition;
         }
@@ -534,26 +519,11 @@ namespace FTELSRCore.Extensions
 
             string organization = (!string.IsNullOrWhiteSpace(audit?.CreatorInfo?.Organization) ? audit?.CreatorInfo?.Organization : CommonBaseConstant.OrganizationForISC);
 
-            // Lấy danh sách property của entity
-            PropertyInfo[] properties = typeof(TTable).GetProperties();
-
-            // Hàm hỗ trợ gán giá trị nếu property có tồn tại và đang là null
-            void SetPropertyIfNull(string propertyName, object value)
-            {
-                PropertyInfo prop = properties.FirstOrDefault(p => p.Name == propertyName);
-
-                if (prop != null && prop.GetValue(updateDefinition) is null)
-                {
-                    updateDefinition.Set(prop.Name, value);
-                }
-            }
-
-            SetPropertyIfNull(nameof(BaseEntityMongoDB.IsDeleted), false);
-            // Gán giá trị mặc định nếu null
-            SetPropertyIfNull(nameof(EntityFullCreatedAndModifiedBase.CreatedUser), userName);
-            SetPropertyIfNull(nameof(EntityFullCreatedAndModifiedBase.CreatedUserCode), userCode);
-            SetPropertyIfNull(nameof(EntityFullCreatedAndModifiedBase.CreatedUserOrganization), organization);
-            SetPropertyIfNull(nameof(EntityFullCreatedAndModifiedBase.CreatedDate), CommonBaseConstant.DateTimeUtc());
+            updateDefinition = updateDefinition.Set(nameof(BaseEntityMongoDB.IsDeleted), false);
+            updateDefinition = updateDefinition.Set(nameof(EntityFullCreatedAndModifiedBase.CreatedUser), userName);
+            updateDefinition = updateDefinition.Set(nameof(EntityFullCreatedAndModifiedBase.CreatedUserCode), userCode);
+            updateDefinition = updateDefinition.Set(nameof(EntityFullCreatedAndModifiedBase.CreatedUserOrganization), organization);
+            updateDefinition = updateDefinition.Set(nameof(EntityFullCreatedAndModifiedBase.CreatedDate), CommonBaseConstant.DateTimeUtc());
 
             return updateDefinition;
         }

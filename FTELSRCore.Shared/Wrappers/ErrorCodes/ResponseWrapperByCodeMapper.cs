@@ -21,8 +21,8 @@ namespace FTELSRCore.Wrappers.ErrorCodes
             return new CatalogsErrorCodeModel
             (
                 Code: $"SYS_{statusCodeConvertEnum}",
-                Description: nameof(statusCodeConvertEnum),
-                Message: nameof(statusCodeConvertEnum),
+                Description: statusCodeConvertEnum.ToString(),
+                Message: statusCodeConvertEnum.ToString(),
                 Retryable: false
             );
         }

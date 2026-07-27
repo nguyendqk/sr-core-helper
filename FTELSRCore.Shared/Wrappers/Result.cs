@@ -71,7 +71,7 @@ namespace FTELSRCore.Wrappers
             };
 
         public static Result Fail(
-            List<string> messages, bool succeeded = true, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTelCoreErrorModel error = null)
+            List<string> messages, bool succeeded = false, int statusCode = (int)HttpStatusCode.BadRequest, ResultFTelCoreErrorModel error = null)
             => new Result
             {
                 Code = statusCode,
