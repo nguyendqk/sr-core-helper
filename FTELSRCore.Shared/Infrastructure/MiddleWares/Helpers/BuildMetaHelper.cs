@@ -4,9 +4,9 @@ namespace FTELSRCore.Infrastructure.MiddleWares.Helpers
 {
     public class BuildMetaHelper
     {
-        public static ResultFTELCoreMetadataModel Build(HttpContext httpContext)
+        public static ResultFTelCoreMetadataModel Build(HttpContext httpContext)
         {
-            return new ResultFTELCoreMetadataModel
+            return new ResultFTelCoreMetadataModel
             {
                 Request_Id = httpContext?.TraceIdentifier,
                 Trace_Id = ResolveTraceId(httpContext: httpContext),

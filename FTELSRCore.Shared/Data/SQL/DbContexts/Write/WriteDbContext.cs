@@ -54,7 +54,7 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
 
             if (result > 0)
             {
-                await OnAfterSaveChanges(detectChangesAudit);
+                await OnAfterSaveChanges(detectChangesAudit, cancellationToken);
             }
 
             return result;
@@ -68,7 +68,7 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
 
             if (result >= 1)
             {
-                await OnAfterSaveChanges();
+                await OnAfterSaveChanges(cancellationToken: cancellationToken);
             }
 
             return result;
@@ -95,11 +95,14 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
                 return;
             }
 
-            string userName = (!string.IsNullOrWhiteSpace(audit?.CreatorInfo?.Name) ? audit?.CreatorInfo?.Name : CommonBaseConstant.Anonymous);
+            string userName =
+                !string.IsNullOrWhiteSpace(audit?.CreatorInfo?.Name) ? audit?.CreatorInfo?.Name : CommonBaseConstant.Anonymous;
 
-            string userCode = (!string.IsNullOrWhiteSpace(audit?.CreatorInfo?.Code) ? audit?.CreatorInfo?.Code : CommonBaseConstant.AnonymousCode);
+            string userCode =
+                !string.IsNullOrWhiteSpace(audit?.CreatorInfo?.Code) ? audit?.CreatorInfo?.Code : CommonBaseConstant.AnonymousCode;
 
-            string organization = (!string.IsNullOrWhiteSpace(audit?.CreatorInfo?.Organization) ? audit?.CreatorInfo?.Organization : CommonBaseConstant.OrganizationForISC);
+            string organization =
+                !string.IsNullOrWhiteSpace(audit?.CreatorInfo?.Organization) ? audit?.CreatorInfo?.Organization : CommonBaseConstant.OrganizationForISC;
 
             foreach (var entry in filtered)
             {
@@ -319,11 +322,11 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
     ///
     public partial class WriteDbContext<TContext> where TContext : DbContext
     {
-        private async Task OnAfterSaveChanges(List<SnapshotAuditModel> auditEntries = null)
+        private async Task OnAfterSaveChanges(List<SnapshotAuditModel> auditEntries = null, CancellationToken cancellationToken = default)
         {
             await DispatchAuditLog(auditEntries);
 
-            await DispatchDomainEvents();
+            await DispatchDomainEvents(cancellationToken: cancellationToken);
         }
 
         private Task DispatchAuditLog(List<SnapshotAuditModel> auditEntries)
@@ -360,7 +363,7 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
             return base.SaveChangesAsync();
         }
 
-        public async Task DispatchDomainEvents(List<IDomainEvent> domainEvents = null)
+        public async Task DispatchDomainEvents(List<IDomainEvent> domainEvents = null, CancellationToken cancellationToken = default)
         {
             domainEvents ??= [];
 
@@ -390,7 +393,7 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
 
             foreach (IDomainEvent domainEvent in domainEventsToPublish)
             {
-                await publisher.Publish(domainEvent, cancellationToken: CancellationToken.None).ConfigureAwait(false);
+                await publisher.Publish(domainEvent, cancellationToken: cancellationToken).ConfigureAwait(false);
             }
         }
     }

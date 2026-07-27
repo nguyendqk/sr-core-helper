@@ -25,12 +25,6 @@ namespace FTELSRCore.Wrappers
         string Status { get; set; }
 
         /// <summary>
-        /// 
-        /// </summary>
-        [JsonPropertyName("success")]
-        bool Success { get; set; }
-
-        /// <summary>
         /// Tình trạng xử lý tại hệ thống
         /// [QUY ĐỊNH]:
         /// true: Hệ thống chập nhận các Rule hệ thống cho phép đến hàm xử lý yêu cầu.
@@ -40,8 +34,12 @@ namespace FTELSRCore.Wrappers
         [JsonPropertyName("dispatched")]
         bool Dispatched { get; set; }
 
-        //[JsonPropertyName("succeeded")]
-        //bool Succeeded { get; set; }
+        /// <summary>
+        /// Yêu cầu xử lý có thành công hay không.
+        /// </summary>
+        /// 
+        [JsonPropertyName("succeeded")]
+        bool Succeeded { get; set; }
 
         /// <summary>
         /// Hệ thống xử lý yêu cầu
@@ -65,13 +63,13 @@ namespace FTELSRCore.Wrappers
     public partial interface IResult
     {
         [JsonPropertyName("meta")]
-        public ResultFTELCoreMetadataModel Meta { get; set; }
+        public ResultFTelCoreMetadataModel Meta { get; set; }
 
         [JsonPropertyName("error")]
-        public ResultFTELCoreErrorModel Error { get; set; }
+        public ResultFTelCoreErrorModel Error { get; set; }
     }
 
-    public sealed record ResultFTELCoreErrorModel
+    public sealed record ResultFTelCoreErrorModel
     {
         /// <summary>
         /// Mã lỗi nội bộ dạng string (ví dụ: SR_500, INVALID_OTP).
@@ -88,7 +86,7 @@ namespace FTELSRCore.Wrappers
         public bool Retryable { get; set; } = false;
     }
 
-    public sealed record ResultFTELCoreMetadataModel
+    public sealed record ResultFTelCoreMetadataModel
     {
         /// <summary>
         /// ID định danh request (per-request, sinh bởi gateway / ASP.NET TraceIdentifier).

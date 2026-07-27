@@ -32,7 +32,7 @@ namespace FTELSRCore.Infrastructure.MiddleWares
                     message.AppendLine($"[RequestBody]: {requestBody}");
                 }
 
-                logger.ErrorException(nameof(ExceptionHandlerMiddleWare), nameof(Invoke), e: exception, message: message.ToString());
+                logger.ErrorException(nameof(ExceptionHandlerMiddleWare), nameof(Invoke), e: exception, message: message);
 
                 if (httpContext.Response.HasStarted)
                 {
@@ -82,11 +82,11 @@ namespace FTELSRCore.Infrastructure.MiddleWares
                         }
                 }
 
-                CatalogsErorrCodeModel wrapperByCode =
+                CatalogsErrorCodeModel wrapperByCode =
                     ResponseWrapperByCodeMapper.FromStatusCode(
                         statusCode: (HttpStatusCode)responseModel.Code, sourceType: ErrorSourceType.General);
 
-                responseModel.Error = new ResultFTELCoreErrorModel
+                responseModel.Error = new ResultFTelCoreErrorModel
                 {
                     Code = wrapperByCode.Code,
                     Retryable = wrapperByCode.Retryable,

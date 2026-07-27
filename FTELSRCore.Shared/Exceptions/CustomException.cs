@@ -14,7 +14,7 @@ namespace FTELSRCore.Exceptions
 
         public string System { get; set; } = CommonBaseConstant.System;
 
-        public CustomException(int statusCode, Exception inner) : this(inner.ToString(), statusCode)
+        public CustomException(int statusCode, Exception inner) : this(inner?.Message?.ToString(), statusCode)
         {
         }
     }

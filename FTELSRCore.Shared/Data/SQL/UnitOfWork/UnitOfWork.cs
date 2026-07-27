@@ -30,6 +30,14 @@ namespace FTELSRCore.Data.SQL.UnitOfWork
         {
             await Context(cancellationToken);
 
+            if (_transaction is not null)
+            {
+                logger.Warning(nameof(UnitOfWork), nameof(CreateTransactionAsync),
+                    "[TRANSACTION] - Phát hiện transaction cũ chưa commit/rollback, tự rollback trước khi tạo transaction mới.");
+
+                await RollbackAsync();
+            }
+
             _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
             logger.Warning(nameof(UnitOfWork), nameof(CreateTransactionAsync), "[TRANSACTION] - Create transaction.");
@@ -39,13 +47,36 @@ namespace FTELSRCore.Data.SQL.UnitOfWork
 
         public async Task CommitAsync(CancellationToken cancellationToken = default)
         {
-            _ = await SaveChangeAsync(cancellationToken: cancellationToken);
+            try
+            {
+                _ = await SaveChangeAsync(cancellationToken: cancellationToken);
 
-            await _transaction.CommitAsync(cancellationToken);
+                await _transaction.CommitAsync(cancellationToken);
 
-            await DisposeTransactionAsync();
+                await DisposeTransactionAsync();
 
-            logger.Warning(nameof(UnitOfWork), nameof(CommitAsync), "[TRANSACTION] - Commit transaction.");
+                logger.Warning(nameof(UnitOfWork), nameof(CommitAsync), "[TRANSACTION] - Commit transaction.");
+            }
+            catch (Exception exception)
+            {
+                logger.Warning(nameof(UnitOfWork), nameof(CommitAsync),
+                    $"[TRANSACTION] - Lỗi khi commit, tiến hành rollback. Ex: {exception.Message}");
+
+                try
+                {
+                    if (_transaction is not null)
+                    {
+                        await RollbackAsync();
+                    }
+                }
+                catch (Exception rollbackException)
+                {
+                    logger.Warning(nameof(UnitOfWork), nameof(CommitAsync),
+                        $"[TRANSACTION] - Rollback sau lỗi commit cũng thất bại. Ex: {rollbackException.Message}");
+                }
+
+                throw;
+            }
         }
 
         public async Task RollbackAsync()

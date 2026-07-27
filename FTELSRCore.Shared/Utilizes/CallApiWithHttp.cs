@@ -50,11 +50,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 using CancellationTokenSource cancellationTokenSource =
                     CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
 
@@ -167,11 +162,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 using CancellationTokenSource cancellationTokenSource =
                     CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
@@ -286,11 +276,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 using var requestMessage = new HttpRequestMessage(method: HttpMethod.Get, urlQueryString)
                 {
@@ -414,11 +399,6 @@ namespace FTELSRCore.Utilizes
                     client.BaseAddress = new Uri(option.BaseAddress);
                 }
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 if (!string.IsNullOrEmpty(option.Token))
                 {
                     client.DefaultRequestHeaders.Authorization =
@@ -536,11 +516,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 StringContent content = new(json, Encoding.UTF8, MediaTypeNames.Application.Json);
 
                 using CancellationTokenSource cancellationTokenSource =
@@ -654,11 +629,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 // Create multipart content
                 MultipartFormDataContent content = [];
@@ -818,11 +788,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 // Create multipart content
                 MultipartFormDataContent content = [];
 
@@ -979,11 +944,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 StringContent content = new(json, Encoding.UTF8, MediaTypeNames.Application.Json);
 
                 if (headers != null)
@@ -1109,11 +1069,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 StringContent content = new(json, Encoding.UTF8, MediaTypeNames.Application.Json);
 
                 using CancellationTokenSource cancellationTokenSource =
@@ -1232,11 +1187,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 using CancellationTokenSource cancellationTokenSource =
                      CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
 
@@ -1350,11 +1300,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 StringContent content = new(json, Encoding.UTF8, MediaTypeNames.Application.Json);
 
@@ -1515,11 +1460,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 using CancellationTokenSource cancellationTokenSource =
                     CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
 
@@ -1627,11 +1567,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 using CancellationTokenSource cancellationTokenSource =
                     CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
@@ -1742,11 +1677,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 using CancellationTokenSource cancellationTokenSource =
                       CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
@@ -1865,11 +1795,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 using CancellationTokenSource cancellationTokenSource =
                     CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
@@ -1990,11 +1915,6 @@ namespace FTELSRCore.Utilizes
                     client.BaseAddress = new Uri(option.BaseAddress);
                 }
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 if (!string.IsNullOrEmpty(option.Token))
                 {
                     client.DefaultRequestHeaders.Authorization =
@@ -2111,11 +2031,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 if (headers != null)
                 {
@@ -2237,11 +2152,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 using CancellationTokenSource cancellationTokenSource =
                     CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
 
@@ -2354,11 +2264,6 @@ namespace FTELSRCore.Utilizes
             {
                 HttpClient client = option.ConfigHttpClient();
 
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
-
                 using CancellationTokenSource cancellationTokenSource =
                     CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
 
@@ -2470,11 +2375,6 @@ namespace FTELSRCore.Utilizes
             try
             {
                 HttpClient client = option.ConfigHttpClient();
-
-                if (cancellationTokenTime > 0)
-                {
-                    client.Timeout = TimeSpan.FromSeconds(cancellationTokenTime);
-                }
 
                 using var cancellationTokenSource =
                       CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);

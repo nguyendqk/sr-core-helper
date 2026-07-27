@@ -5,12 +5,18 @@ using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
+using System.Collections.Concurrent;
 using System.Globalization;
 
 namespace FTELSRCore.Data.MongoDB.Helpers
 {
     public static class ConfigurationHelpers
     {
+        /// <summary>
+        /// Cache MongoClient theo connection string cho health-check, tránh tạo mới
+        /// (và mở pool kết nối mới) ở mỗi lần gọi IsCheckConnection.
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, MongoClient> _healthCheckClients = new();
         /// <summary>
         ///
         /// </summary>
@@ -120,7 +126,7 @@ namespace FTELSRCore.Data.MongoDB.Helpers
                 return false;
             }
 
-            MongoClient client = new(connectionDatabase);
+            MongoClient client = _healthCheckClients.GetOrAdd(connectionDatabase, connectionString => new MongoClient(connectionString));
 
             IMongoDatabase database = client.GetDatabase(databaseName);
 
@@ -128,7 +134,20 @@ namespace FTELSRCore.Data.MongoDB.Helpers
 
             try
             {
-                pingResult = database.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait(timeWait);
+                // CancellationToken gắn với timeWait để driver thực sự huỷ lệnh ping khi hết
+                // hạn, thay vì để nó tiếp tục chạy nền trên client đã bị "bỏ rơi".
+                using CancellationTokenSource cancellationTokenSource = new(timeWait);
+
+                database
+                    .RunCommandAsync((Command<BsonDocument>)"{ping:1}", cancellationToken: cancellationTokenSource.Token)
+                    .GetAwaiter()
+                    .GetResult();
+
+                pingResult = true;
+            }
+            catch (OperationCanceledException)
+            {
+                pingResult = false;
             }
             catch (Exception exception)
             {

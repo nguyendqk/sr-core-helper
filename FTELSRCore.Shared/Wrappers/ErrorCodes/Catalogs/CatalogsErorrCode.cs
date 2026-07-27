@@ -2,51 +2,51 @@
 
 namespace FTELSRCore.Wrappers.ErrorCodes.Catalogs
 {
-    public static class CatalogsErorrCode
+    public static class CatalogsErrorCode
     {
         public static readonly IReadOnlyDictionary<
             (int StatusCode, ErrorSourceType Source),
-            CatalogsErorrCodeModel> StatusMap =
+            CatalogsErrorCodeModel> StatusMap =
                 new Dictionary<
                     (int, ErrorSourceType),
-                    CatalogsErorrCodeModel>
+                    CatalogsErrorCodeModel>
                 {
                     [(400, ErrorSourceType.General)] =
-                        CatalogsErorrCodes.BadRequest,
+                        CatalogsErrorCodes.BadRequest,
 
                     [(401, ErrorSourceType.Authentication)] =
-                        CatalogsErorrCodes.Unauthorized,
+                        CatalogsErrorCodes.Unauthorized,
 
                     [(403, ErrorSourceType.Authentication)] =
-                        CatalogsErorrCodes.Forbidden,
+                        CatalogsErrorCodes.Forbidden,
 
                     [(408, ErrorSourceType.General)] =
-                        CatalogsErorrCodes.RequestTimeout,
+                        CatalogsErrorCodes.RequestTimeout,
 
                     [(426, ErrorSourceType.Authentication)] =
-                        CatalogsErorrCodes.UpgradeRequired,
+                        CatalogsErrorCodes.UpgradeRequired,
 
                     [(429, ErrorSourceType.General)] =
-                        CatalogsErorrCodes.RateLimit,
+                        CatalogsErrorCodes.RateLimit,
 
                     [(500, ErrorSourceType.General)] =
-                        CatalogsErorrCodes.SystemError,
+                        CatalogsErrorCodes.SystemError,
 
                     [(500, ErrorSourceType.Database)] =
-                        CatalogsErorrCodes.DatabaseError,
+                        CatalogsErrorCodes.DatabaseError,
 
                     [(502, ErrorSourceType.Network)] =
-                        CatalogsErorrCodes.NetworkError,
+                        CatalogsErrorCodes.NetworkError,
 
                     [(503, ErrorSourceType.Database)] =
-                        CatalogsErorrCodes.DatabaseUnavailable,
+                        CatalogsErrorCodes.DatabaseUnavailable,
 
                     [(504, ErrorSourceType.ExternalService)] =
-                        CatalogsErorrCodes.ExternalTimeout
+                        CatalogsErrorCodes.ExternalTimeout
                 };
     }
 
-    public sealed record CatalogsErorrCodeModel(
+    public sealed record CatalogsErrorCodeModel(
         string Code,
         string Message,
         string Description = null,

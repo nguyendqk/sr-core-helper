@@ -77,7 +77,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
 
             string username = CommonBaseConstant.Anonymous;
 
-            if ((context.User?.FindFirst(ClaimTypes.Name)).Value is string userName
+            if (context.User?.FindFirst(ClaimTypes.Name)?.Value is string userName
                 && !string.IsNullOrWhiteSpace(userName))
             {
                 username = userName;

@@ -61,9 +61,13 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <returns>Số lượng bản ghi thỏa điều kiện.</returns>
         ///
         public virtual async Task<long> CountAllAsync(
-            FilterDefinition<TTable> filter, CancellationToken cancellationToken = default)
+            FilterDefinition<TTable> filter = null, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            // filter = null nghĩa là "lấy tất cả" theo tài liệu của interface — driver
+            // ném ArgumentNullException nếu nhận filter null nên phải quy về Filter.Empty.
+            filter ??= Builders<TTable>.Filter.Empty;
 
             return await _pipelineRead.ExecuteAsync(
                 callback: async ct =>
@@ -1125,7 +1129,7 @@ namespace FTELSRCore.Data.MongoDB.Core
                 TTable data =
                     ProjectToExtensions.SetDataCreatedDefault(entity: entity, audit: audit);
 
-                if (entity is not null)
+                if (data is not null)
                 {
                     result.Add(data);
                 }

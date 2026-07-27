@@ -36,40 +36,78 @@ namespace FTELSRCore.Caches
 
             options = FusionCacheEntryOptions(expiredMinutes, options);
 
+            switch (step)
+            {
+                case StepCache.Local:
+                    {
+                        options.SkipDistributedCacheRead = true;
+                        options.SkipDistributedCacheWrite = true;
+
+                        break;
+                    }
+                case StepCache.Distributed:
+                    {
+                        options.SkipMemoryCacheRead = true;
+                        options.SkipMemoryCacheWrite = true;
+
+                        options.AllowBackgroundDistributedCacheOperations = true;
+
+                        options.DistributedCacheSoftTimeout = TimeSpan.FromSeconds(cancellationTokenTime);
+
+                        options.DistributedCacheHardTimeout = TimeSpan.FromSeconds(cancellationTokenTime + 1);
+
+                        break;
+                    }
+                default:
+                    {
+                        options.AllowBackgroundDistributedCacheOperations = true;
+
+                        options.DistributedCacheSoftTimeout = TimeSpan.FromSeconds(cancellationTokenTime);
+
+                        options.DistributedCacheHardTimeout = TimeSpan.FromSeconds(cancellationTokenTime + 1);
+
+                        break;
+                    }
+            }
+
             try
             {
-                string getByKey =
-                    await GetCacheByKeyAsync(key: key,
-                                             step: step,
-                                             options: options,
-                                             cancellationToken: cancellationTokenSource.Token).ConfigureAwait(false);
+                // Dùng GetOrSetAsync (thay vì TryGetAsync + func() + SetAsync thủ công) để tận
+                // dụng cơ chế singleflight có sẵn của FusionCache: khi key hết hạn dưới tải cao,
+                // chỉ 1 request thực sự chạy factory (gọi func gốc), các request đồng thời khác
+                // chờ và dùng chung kết quả — tránh "thundering herd" gọi trùng lặp vào nguồn gốc.
+                string resultString =
+                    await fusionCache.GetOrSetAsync<string>(
+                        key: key,
+                        factory: async (ctx, ct) =>
+                        {
+                            TOut dataResult =
+                                await GetResultAsync(func: func, cancellationToken: ct).ConfigureAwait(false);
 
-                if (!string.IsNullOrWhiteSpace(getByKey)
-                    && getByKey.JSonTryParse(out TOut result))
-                {
-                    return result;
-                }
+                            string serialized = dataResult?.ToJSon();
 
-                result =
-                    await GetResultAsync(
-                        func: func, cancellationToken: cancellationTokenSource.Token).ConfigureAwait(false);
+                            if (string.IsNullOrWhiteSpace(serialized)
+                                || serialized == "null"
+                                || serialized == "{}"
+                                || serialized == "[]")
+                            {
+                                // Không cache giá trị rỗng/miss.
+                                ctx.Options.SkipDistributedCacheWrite = true;
+                                ctx.Options.SkipMemoryCacheWrite = true;
 
-                string resultString = result?.ToJSon();
+                                return null;
+                            }
+
+                            return serialized;
+                        },
+                        options: options,
+                        token: cancellationTokenSource.Token).ConfigureAwait(false);
 
                 if (string.IsNullOrWhiteSpace(resultString)
-                    || resultString == "null"
-                    || resultString == "{}"
-                    || resultString == "[]")
+                    || !resultString.JSonTryParse(out TOut result))
                 {
                     return null;
                 }
-
-                await SetCacheByKeyAsync(key: key,
-                                         step: step,
-                                         options: options,
-                                         value: resultString,
-                                         expiredMinutes: expiredMinutes,
-                                         cancellationToken: cancellationTokenSource.Token).ConfigureAwait(false);
 
                 return result;
             }
@@ -517,7 +555,8 @@ namespace FTELSRCore.Caches
         private static FusionCacheEntryOptions FusionCacheEntryOptions(
             double expiredMinutes, FusionCacheEntryOptions options = null)
         {
-            options ??= CoreCacheHelper.FusionCacheEntryOptionsDefault();
+            options ??=
+                options is null ? CoreCacheHelper.FusionCacheEntryOptionsDefault() : options.Duplicate();
 
             options.Duration = expiredMinutes <= 0 ? TimeSpan.FromMinutes(5) : TimeSpan.FromMinutes(expiredMinutes);
 

@@ -185,7 +185,7 @@ namespace FTELSRCore.Data.SQL.Helpers.Policies
         /// <returns></returns>
         private static bool IsRetryable(Exception ex, bool handleAllTransient)
         {
-            if (ex is SqlException sqlEx)
+            if (UnwrapSqlException(ex) is { } sqlEx)
             {
                 return handleAllTransient
                     ? RetryableSqlErrors.Contains(sqlEx.Number)
@@ -209,12 +209,35 @@ namespace FTELSRCore.Data.SQL.Helpers.Policies
         /// <returns></returns>
         private static bool IsConnectionLevel(Exception ex)
         {
-            if (ex is SqlException sqlEx)
+            if (UnwrapSqlException(ex) is { } sqlEx)
             {
                 return ConnectionLevelSqlErrors.Contains(sqlEx.Number);
             }
 
             return ex is SocketException;
+        }
+
+        /// <summary>
+        /// EF Core bọc lỗi ghi (SaveChangesAsync) trong DbUpdateException, SqlException thật
+        /// nằm ở InnerException — cần bóc tách để policy nhận diện đúng lỗi connection-level.
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <returns></returns>
+        private static SqlException UnwrapSqlException(Exception ex)
+        {
+            Exception current = ex;
+
+            while (current is not null)
+            {
+                if (current is SqlException sqlException)
+                {
+                    return sqlException;
+                }
+
+                current = current.InnerException;
+            }
+
+            return null;
         }
     }
 }

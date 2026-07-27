@@ -1,6 +1,4 @@
-﻿// Ignore Spelling: Mongo
-
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.Text.Json.Serialization;
 using static FTELSRCore.Helpers.JSonParseHelpers;

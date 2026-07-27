@@ -17,7 +17,8 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
     {
         public static Action<JwtBearerOptions> AddJWTBearer(ILogger logger, JWTOptions jwtOptions, JWTBearerModel model)
         {
-            if (EnvironmentExtensions.GetEnvironment() is not EnvironmentExtensions.EProd)
+            if (EnvironmentExtensions.GetEnvironment() is (EnvironmentExtensions.ELocal 
+                                                        or EnvironmentExtensions.EDev))
             {
                 IdentityModelEventSource.ShowPII = true;
             }
@@ -27,7 +28,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
             return (bearer) =>
             {
                 bearer.SaveToken = true;
-                bearer.RequireHttpsMetadata = false;
+                bearer.RequireHttpsMetadata = true;
                 bearer.TokenValidationParameters =
                     new TokenValidationParameters()
                     {
@@ -70,7 +71,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                 context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                                CatalogsErorrCodeModel wrapperByCode =
+                                CatalogsErrorCodeModel wrapperByCode =
                                     ResponseWrapperByCodeMapper.FromStatusCode(
                                         statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
 
@@ -79,7 +80,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                     message: "Thông tin Token được cấp đã hết hạn",
                                     serviceName: model.ServiceName ?? CommonBaseConstant.System,
                                     metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
-                                    error: new ResultFTELCoreErrorModel
+                                    error: new ResultFTelCoreErrorModel
                                     {
                                         Code = wrapperByCode.Code,
                                         Retryable = wrapperByCode.Retryable
@@ -98,7 +99,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                 context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                                CatalogsErorrCodeModel wrapperByCode =
+                                CatalogsErrorCodeModel wrapperByCode =
                                     ResponseWrapperByCodeMapper.FromStatusCode(
                                         statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
 
@@ -107,7 +108,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                     message: "Xử lý đăng nhập để cấp quyền không thành công",
                                     serviceName: model.ServiceName ?? CommonBaseConstant.System,
                                     metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
-                                    error: new ResultFTELCoreErrorModel
+                                    error: new ResultFTelCoreErrorModel
                                     {
                                         Code = wrapperByCode.Code,
                                         Retryable = wrapperByCode.Retryable
@@ -142,7 +143,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                 context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                                CatalogsErorrCodeModel wrapperByCode =
+                                CatalogsErrorCodeModel wrapperByCode =
                                     ResponseWrapperByCodeMapper.FromStatusCode(
                                         statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
 
@@ -151,7 +152,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                     statusCode: (int)HttpStatusCode.Unauthorized,
                                     serviceName: model.ServiceName ?? CommonBaseConstant.System,
                                     metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
-                                    error: new ResultFTELCoreErrorModel
+                                    error: new ResultFTelCoreErrorModel
                                     {
                                         Code = wrapperByCode.Code,
                                         Retryable = wrapperByCode.Retryable
@@ -171,7 +172,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                             context.Response.ContentType = MediaTypeNames.Application.Json;
                             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
 
-                            CatalogsErorrCodeModel wrapperByCode =
+                            CatalogsErrorCodeModel wrapperByCode =
                                 ResponseWrapperByCodeMapper.FromStatusCode(
                                     statusCode: HttpStatusCode.Forbidden, sourceType: ErrorSourceType.Authentication);
 
@@ -180,7 +181,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                 message: "Yêu cầu không được phép truy cập tài nguyên này",
                                 serviceName: model.ServiceName ?? CommonBaseConstant.System,
                                 metadata: BuildMetaHelper.Build(httpContext: context.HttpContext),
-                                error: new ResultFTELCoreErrorModel
+                                error: new ResultFTelCoreErrorModel
                                 {
                                     Code = wrapperByCode.Code,
                                     Retryable = wrapperByCode.Retryable

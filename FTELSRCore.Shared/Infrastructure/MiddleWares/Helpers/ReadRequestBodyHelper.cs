@@ -21,24 +21,45 @@ namespace FTELSRCore.Infrastructure.MiddleWares.Helpers
                     return "File upload";
                 }
 
-                if (httpContext.Request.ContentLength is > MaxSizeContent)
+                if (!httpContext.Request.Body.CanSeek)
                 {
-                    return "Body too large";
+                    return string.Empty;
                 }
 
                 httpContext.Request.Body.Position = 0;
 
-                using var readerBody = new StreamReader(
-                    httpContext.Request.Body,
-                    encoding: Encoding.UTF8,
-                    detectEncodingFromByteOrderMarks: false,
-                    leaveOpen: true);
+                using var boundedBody = new MemoryStream();
 
-                string body = await readerBody.ReadToEndAsync();
+                byte[] buffer = new byte[81920];
+
+                long totalBytesRead = 0;
+
+                bool tooLarge = false;
+
+                int bytesRead;
+
+                while ((bytesRead = await httpContext.Request.Body.ReadAsync(buffer)) > 0)
+                {
+                    totalBytesRead += bytesRead;
+
+                    if (totalBytesRead > MaxSizeContent)
+                    {
+                        tooLarge = true;
+
+                        break;
+                    }
+
+                    await boundedBody.WriteAsync(buffer.AsMemory(0, bytesRead));
+                }
 
                 httpContext.Request.Body.Position = 0;
 
-                return body;
+                if (tooLarge)
+                {
+                    return "Body too large";
+                }
+
+                return Encoding.UTF8.GetString(boundedBody.ToArray());
             }
             catch
             {

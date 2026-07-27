@@ -16,6 +16,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
                                                       int period = 5,
                                                       string topic = "logs",
                                                       int batchSizeLimit = 50,
+                                                      int queueLimit = 10_000,
                                                       string saslUsername = null,
                                                       string saslPassword = null,
                                                       string sslCaLocation = null,
@@ -28,6 +29,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
                                                period: period,
                                                topicDecider: null,
                                                formatter: formatter,
+                                               queueLimit: queueLimit,
                                                saslUsername: saslUsername,
                                                saslPassword: saslPassword,
                                                saslMechanism: saslMechanism,
@@ -41,6 +43,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
                                                    int period,
                                                    string topic,
                                                    int batchSizeLimit,
+                                                   int queueLimit,
                                                    string saslUsername,
                                                    string saslPassword,
                                                    string sslCaLocation,
@@ -64,7 +67,10 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
                                                     options: new()
                                                     {
                                                         BatchSizeLimit = batchSizeLimit,
-                                                        Period = TimeSpan.FromSeconds(period)
+                                                        Period = TimeSpan.FromSeconds(period),
+                                                        // Chặn tăng trưởng bộ nhớ không giới hạn khi Kafka broker
+                                                        // gián đoạn kéo dài — mặc định của thư viện là unbounded.
+                                                        QueueLimit = queueLimit
                                                     });
 
             return loggerConfiguration.Sink(logEventSink);
@@ -81,11 +87,12 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
             this LoggerSinkConfiguration loggerConfiguration,
             List<TenantSRKafkaSinkModel> kafkaSinkModels,
             ITextFormatter formatter = null,
-            int period = 5, int batchSizeLimit = 50)
+            int period = 5, int batchSizeLimit = 50, int queueLimit = 10_000)
         {
             return loggerConfiguration.TenantSRKafkas(period: period,
                                                       formatter: formatter,
                                                       batchSizeLimit: batchSizeLimit,
+                                                      queueLimit: queueLimit,
                                                       kafkaSinkModels: kafkaSinkModels);
         }
 
@@ -93,7 +100,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
             this LoggerSinkConfiguration loggerConfiguration,
             List<TenantSRKafkaSinkModel> kafkaSinkModels,
             ITextFormatter formatter = null,
-            int period = 5, int batchSizeLimit = 50)
+            int period = 5, int batchSizeLimit = 50, int queueLimit = 10_000)
         {
             TenantSRKafkaSinkExtensions batchedSink = new(kafkaSinkModels, formatter);
 
@@ -102,7 +109,10 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
                 options: new PeriodicBatchingSinkOptions
                 {
                     BatchSizeLimit = batchSizeLimit,
-                    Period = TimeSpan.FromSeconds(period)
+                    Period = TimeSpan.FromSeconds(period),
+                    // Chặn tăng trưởng bộ nhớ không giới hạn khi Kafka broker
+                    // gián đoạn kéo dài — mặc định của thư viện là unbounded.
+                    QueueLimit = queueLimit
                 });
 
             return loggerConfiguration.Sink(logEventSink);

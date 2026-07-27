@@ -21,7 +21,16 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
                 {
                     string key = text.Replace(SerilogEnvVar, string.Empty).Replace("_", "").ToLower();
 
-                    config.SetValue(key, value);
+                    try
+                    {
+                        config.SetValue(key, value);
+                    }
+                    catch (Exception exception)
+                    {
+                        CommonBaseConstant.ConfigLoggerExceptionByConsole(
+                            nameof(SRProducerConfigExtensions), nameof(LoadFromEnvironmentVariables),
+                            exception: exception, description: $"Bỏ qua biến môi trường không hợp lệ: {text}");
+                    }
                 }
             }
 
@@ -102,7 +111,13 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.LoggerConfigurationExtens
 
             Dictionary<Type, Action> dictionary2 = dictionary;
 
-            dictionary2[propertyInfo.PropertyType]();
+            if (!dictionary2.TryGetValue(propertyInfo.PropertyType, out Action setter))
+            {
+                throw new CustomException(
+                    message: $"Kiểu ({propertyInfo.PropertyType.Name}) của property ({propertyName}) chưa được hỗ trợ trong SRProducerConfigExtensions.");
+            }
+
+            setter();
 
             if (objValue is null)
             {

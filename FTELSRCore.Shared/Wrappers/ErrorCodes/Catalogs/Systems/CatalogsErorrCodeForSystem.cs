@@ -1,19 +1,19 @@
 ﻿namespace FTELSRCore.Wrappers.ErrorCodes.Catalogs.Systems
 {
-    public static class CatalogsErorrCodes
+    public static class CatalogsErrorCodes
     {
         // =========================
         // GENERAL
         // =========================
 
-        public static readonly CatalogsErorrCodeModel BadRequest =
+        public static readonly CatalogsErrorCodeModel BadRequest =
             new(
                 "BUSINESS_RULE_400",
                 "Yêu cầu không hợp lệ",
                 "Invalid request payload or missing fields"
             );
 
-        public static readonly CatalogsErorrCodeModel RequestTimeout =
+        public static readonly CatalogsErrorCodeModel RequestTimeout =
             new(
                 "REQ_TIMEOUT",
                 "Yêu cầu xử lý quá lâu",
@@ -21,7 +21,7 @@
                 true
             );
 
-        public static readonly CatalogsErorrCodeModel RateLimit =
+        public static readonly CatalogsErrorCodeModel RateLimit =
             new(
                 "RATE_429",
                 "Gửi quá nhiều yêu cầu được gủi đến",
@@ -29,7 +29,7 @@
                 true
             );
 
-        public static readonly CatalogsErorrCodeModel SystemError =
+        public static readonly CatalogsErrorCodeModel SystemError =
             new(
                 "SYS_500",
                 "Lỗi hệ thống",
@@ -40,21 +40,21 @@
         // AUTHENTICATION
         // =========================
 
-        public static readonly CatalogsErorrCodeModel Unauthorized =
+        public static readonly CatalogsErrorCodeModel Unauthorized =
             new(
                 "AUTH_401",
                 "Chưa xác thực hoặc thiếu token",
                 "Missing or invalid authentication token"
             );
 
-        public static readonly CatalogsErorrCodeModel Forbidden =
+        public static readonly CatalogsErrorCodeModel Forbidden =
             new(
                 "AUTH_403",
                 "Không có quyền truy cập",
                 "Permission denied"
             );
 
-        public static readonly CatalogsErorrCodeModel UpgradeRequired =
+        public static readonly CatalogsErrorCodeModel UpgradeRequired =
             new(
                 "UPGRADE_REQUIRED",
                 "Cần nâng cấp phiên bản client",
@@ -65,7 +65,7 @@
         // DATABASE
         // =========================
 
-        public static readonly CatalogsErorrCodeModel DatabaseError =
+        public static readonly CatalogsErrorCodeModel DatabaseError =
             new(
                 "DB_500",
                 "Lỗi kết nối hoặc xử lý database",
@@ -73,7 +73,7 @@
                 true
             );
 
-        public static readonly CatalogsErorrCodeModel DatabaseUnavailable =
+        public static readonly CatalogsErrorCodeModel DatabaseUnavailable =
             new(
                 "DB_503",
                 "Database quá tải hoặc không sẵn sàng",
@@ -85,7 +85,7 @@
         // NETWORK
         // =========================
 
-        public static readonly CatalogsErorrCodeModel NetworkError =
+        public static readonly CatalogsErrorCodeModel NetworkError =
             new(
                 "NET_502",
                 "Lỗi kết nối mạng nội bộ",
@@ -97,7 +97,7 @@
         // EXTERNAL SERVICE
         // =========================
 
-        public static readonly CatalogsErorrCodeModel ExternalTimeout =
+        public static readonly CatalogsErrorCodeModel ExternalTimeout =
             new(
                 "EXT_504",
                 "Timeout khi gọi hệ thống bên ngoài",

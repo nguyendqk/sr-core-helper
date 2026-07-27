@@ -5,20 +5,20 @@ namespace FTELSRCore.Wrappers.ErrorCodes
 {
     public class ResponseWrapperByCodeMapper
     {
-        public static CatalogsErorrCodeModel FromStatusCode(
+        public static CatalogsErrorCodeModel FromStatusCode(
              HttpStatusCode statusCode, ErrorSourceType sourceType = ErrorSourceType.General)
         {
-            return CatalogsErorrCode.StatusMap.TryGetValue(
-                ((int)statusCode, sourceType), out CatalogsErorrCodeModel errorCode)
+            return CatalogsErrorCode.StatusMap.TryGetValue(
+                ((int)statusCode, sourceType), out CatalogsErrorCodeModel errorCode)
                 ? errorCode : FromStatusCodeDefault(statusCode: statusCode);
         }
 
-        private static CatalogsErorrCodeModel FromStatusCodeDefault(HttpStatusCode statusCode)
+        private static CatalogsErrorCodeModel FromStatusCodeDefault(HttpStatusCode statusCode)
         {
             HttpStatusCode? statusCodeConvertEnum =
                 ConvertHelpers.ConvertEnum<HttpStatusCode>(statusCode.ToString());
 
-            return new CatalogsErorrCodeModel
+            return new CatalogsErrorCodeModel
             (
                 Code: $"SYS_{statusCodeConvertEnum}",
                 Description: nameof(statusCodeConvertEnum),

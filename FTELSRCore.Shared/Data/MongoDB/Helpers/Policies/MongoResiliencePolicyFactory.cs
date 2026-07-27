@@ -86,6 +86,8 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
         ///
         public static void ConfigureWritePolicy(ResiliencePipelineBuilder builder, ILogger logger)
         {
+            const int writeMaxRetryAttempts = 1;
+
             builder
                 .AddCircuitBreaker(
                     new CircuitBreakerStrategyOptions
@@ -131,7 +133,7 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                     {
                         ShouldHandle = args => new ValueTask<bool>(
                             args.Outcome.Exception is { } ex && IsRetryable(ex, false)),
-                        MaxRetryAttempts = 1,
+                        MaxRetryAttempts = writeMaxRetryAttempts,
                         Delay = TimeSpan.FromMilliseconds(300),
                         BackoffType = DelayBackoffType.Exponential,
                         UseJitter = true,
@@ -141,7 +143,7 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureWritePolicy),
                                 e: args.Outcome.Exception,
-                                message: $"[RETRY {args.AttemptNumber + 1}/{3}] wait {args.RetryDelay.TotalMilliseconds:F0}ms");
+                                message: $"[RETRY {args.AttemptNumber + 1}/{writeMaxRetryAttempts}] wait {args.RetryDelay.TotalMilliseconds:F0}ms");
 
                             return default;
                         }
@@ -150,12 +152,20 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
 
         private static bool IsRetryable(Exception ex, bool handleAllTransient)
         {
-            if (ex is MongoConnectionException
-                or MongoNotPrimaryException
-                or MongoNodeIsRecoveringException
-                or SocketException)
+            // MongoNotPrimaryException/MongoNodeIsRecoveringException: server từ chối NGAY vì đổi
+            // vai trò (không phải primary) — thao tác chưa từng được xử lý, an toàn retry cả ghi.
+            if (ex is MongoNotPrimaryException or MongoNodeIsRecoveringException)
             {
                 return true;
+            }
+
+            // MongoConnectionException/SocketException: mất kết nối có thể xảy ra SAU KHI server
+            // đã xử lý ghi nhưng TRƯỚC KHI client nhận ack — retry ghi trong trường hợp này có thể
+            // tạo bản ghi trùng/áp update 2 lần. Chỉ coi là retryable ở luồng đọc (handleAllTransient),
+            // không áp dụng cho ghi.
+            if (ex is MongoConnectionException or SocketException)
+            {
+                return handleAllTransient;
             }
 
             if (handleAllTransient)

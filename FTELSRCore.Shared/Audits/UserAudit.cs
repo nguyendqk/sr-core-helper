@@ -206,6 +206,8 @@ namespace FTELSRCore.Audits
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            audit ??= new();
+                        
             switch (employee is not null)
             {
                 case false:
@@ -249,6 +251,8 @@ namespace FTELSRCore.Audits
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            audit ??= new();
+            
             switch (creatorInfo is not null)
             {
                 case false:
