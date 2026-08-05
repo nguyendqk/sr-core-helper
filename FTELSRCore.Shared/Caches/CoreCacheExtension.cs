@@ -1,11 +1,14 @@
 ﻿using FTELSRCore.Caches.Helpers;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace FTELSRCore.Caches
 {
     public class CoreCacheExtension(IFusionCache fusionCache, ILogger<CoreCacheExtension> logger) : ICoreCacheExtension
     {
+        private readonly ActivitySource _activitySource = new("FTELSRCore.Caches.CoreCacheExtension");
+
         #region ::::::::::::::::: GET :::::::::::::::::
 
         /// <summary>
@@ -30,6 +33,16 @@ namespace FTELSRCore.Caches
                                                             CancellationToken cancellationToken = default) where TOut : class
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            using Activity activity = _activitySource.StartActivity("cache.get");
+
+            activity.SetTag("cache.key", key);
+            activity.SetTag("cache.name", nameof(GetOrCreateAsync));
+
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return null;
+            }
 
             using CancellationTokenSource cancellationTokenSource =
                  CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
@@ -207,6 +220,11 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            using Activity activity = _activitySource.StartActivity("cache.get");
+
+            activity.SetTag("cache.key", key);
+            activity.SetTag("cache.name", nameof(GetCacheByKeyAsync));
+
             if (string.IsNullOrWhiteSpace(key))
             {
                 return string.Empty;
@@ -315,6 +333,11 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            using Activity activity = _activitySource.StartActivity("cache.get");
+
+            activity.SetTag("cache.key", key);
+            activity.SetTag("cache.name", nameof(SetCacheByKeyAsync));
+
             if (string.IsNullOrWhiteSpace(key))
             {
                 return;
@@ -392,6 +415,11 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            using Activity activity = _activitySource.StartActivity("cache.get");
+
+            activity.SetTag("cache.key", key);
+            activity.SetTag("cache.name", nameof(SetCacheByKeyAsync));
+
             if (string.IsNullOrWhiteSpace(key))
             {
                 return;
@@ -463,6 +491,11 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            using Activity activity = _activitySource.StartActivity("cache.get");
+
+            activity.SetTag("cache.key", string.Join(DelimiterConstant.CHAR_COMMA, keys));
+            activity.SetTag("cache.name", nameof(ClearAllCacheAsync));
+
             try
             {
                 if (keys.IsNullOrEmpty())
@@ -501,6 +534,16 @@ namespace FTELSRCore.Caches
             string key, int cancellationTokenTime = 1, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            using Activity activity = _activitySource.StartActivity("cache.get");
+
+            activity.SetTag("cache.key", key);
+            activity.SetTag("cache.name", nameof(ClearCacheAsync));
+
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return;
+            }
 
             using CancellationTokenSource cancellation =
                 CancellationTokenHelper.CreateLinkedTokenWithTimeout(cancellationToken, cancellationTokenTime);
