@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace FTELSRCore.Infrastructure.Extensions.Helpers.AddHeadersHttpClientExtensions
+namespace FTELSRCore.Infrastructure.Extensions.Helpers.HeaderHttpClientExtensions
 {
     public sealed class UserAgentForwardExtensions : DelegatingHandler
     {

@@ -443,29 +443,29 @@ namespace FTELSRCore.Extensions.Loggers
         #region +++++++++++++++++ CONNECTION +++++++++++++++++
 
         public static void Connection(
-            this ILogger logger, string className, string methodName, string message, Exception e = null)
+            this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
             _connection(logger, className, methodName, message, e);
         }
 
         public static void ConnectionErrorSQL(
-            this ILogger logger, string className, string methodName, Exception e, string message = "")
+            this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
             ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_SQLSERVER, e: e, message: message);
         }
 
         public static void ConnectionErrorMongoDB(
-            this ILogger logger, string className, string methodName, Exception e, string message = "")
+            this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
             ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_MONGODB, e: e, message: message);
         }
 
-        public static void ConnectionErrorRedis(this ILogger logger, string className, string methodName, Exception e, string message = "")
+        public static void ConnectionErrorRedis(this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
             ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_REDIS, e: e, message: message);
         }
 
-        public static void ConnectionErrorKafka(this ILogger logger, string className, string methodName, Exception e, string message = "", string topic = "")
+        public static void ConnectionErrorKafka(this ILogger logger, string className, string methodName, Exception e, object message = null, string topic = "")
         {
             switch (!string.IsNullOrWhiteSpace(topic))
             {
@@ -476,7 +476,7 @@ namespace FTELSRCore.Extensions.Loggers
                             new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
                             "------------CONNECTION------------ {ClassName} - {MethodName} - [Topic:{Topic} - ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                             className, methodName, topic,
-                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message, e?.Message?.Trim(), e?.StackTrace?.Trim());
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
 
                         break;
                     }
@@ -487,19 +487,19 @@ namespace FTELSRCore.Extensions.Loggers
                             new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
                             "------------CONNECTION------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                             className, methodName,
-                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message, e?.Message?.Trim(), e?.StackTrace?.Trim());
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
 
                         break;
                     }
             }
         }
 
-        public static void ConnectionErrorElasticSearch(this ILogger logger, string className, string methodName, Exception e, string message = "")
+        public static void ConnectionErrorElasticSearch(this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
             ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_ELASTICSEARCH, e: e, message: message);
         }
 
-        public static void ConnectionErrorRabbitMQ(this ILogger logger, string className, string methodName, Exception e, string message = "")
+        public static void ConnectionErrorRabbitMQ(this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
             ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_RABBITMQ, e: e, message: message);
         }
@@ -511,7 +511,7 @@ namespace FTELSRCore.Extensions.Loggers
                 new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
                 "------------CONNECTION------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                 className, methodName, errorCategory,
-                message, e?.Message?.Trim(), e?.StackTrace?.Trim());
+                message ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
         }
 
         #endregion +++++++++++++++++ CONNECTION +++++++++++++++++

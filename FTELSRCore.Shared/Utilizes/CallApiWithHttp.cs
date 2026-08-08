@@ -1,5 +1,4 @@
-﻿using Azure;
-using FTELSRCore.Models.Https;
+﻿using FTELSRCore.Models.Https;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.Diagnostics;

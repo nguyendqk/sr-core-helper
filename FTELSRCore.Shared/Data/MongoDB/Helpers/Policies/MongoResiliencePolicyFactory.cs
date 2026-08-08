@@ -2,12 +2,15 @@
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
+using System.Diagnostics;
 using System.Net.Sockets;
 
 namespace FTELSRCore.Data.MongoDB.Helpers.Policies
 {
     public class MongoResiliencePolicyFactory
     {
+        private static readonly ActivitySource ActivitySource = new(OpenTelemetryConstant.MongoResilienceActivitySource);
+
         /// <summary>
         /// Pipeline cho Mongo Read: retry 3 lần exponential+jitter, CB 60%/5req/10s → break 20s.
         /// </summary>
@@ -28,6 +31,13 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                         SamplingDuration = TimeSpan.FromSeconds(10),
                         OnOpened = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("mongodb.circuit_breaker.open", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mongodb");
+                            activity?.SetTag("resilience.state", "open");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+                            activity?.SetTag("resilience.break_duration_ms", args.BreakDuration.TotalMilliseconds);
+
                             logger.Warning(
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureReadPolicy),
@@ -38,6 +48,12 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                         },
                         OnClosed = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("mongodb.circuit_breaker.closed", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mongodb");
+                            activity?.SetTag("resilience.state", "closed");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+
                             logger.Warning(
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureReadPolicy),
@@ -48,6 +64,12 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                         },
                         OnHalfOpened = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("mongodb.circuit_breaker.half_open", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mongodb");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+                            activity?.SetTag("resilience.state", "half_open");
+
                             logger.Warning(
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureReadPolicy),
@@ -67,6 +89,13 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                         UseJitter = true,
                         OnRetry = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("mongodb.retry", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mongodb");
+                            activity?.SetTag("resilience.type", "retry");
+                            activity?.SetTag("retry.attempt", args.AttemptNumber + 1);
+                            activity?.SetTag("retry.delay_ms", args.RetryDelay.TotalMilliseconds);
+
                             logger.Warning(
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureReadPolicy),
@@ -100,6 +129,13 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                         BreakDuration = TimeSpan.FromSeconds(60),
                         OnOpened = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("mongodb.circuit_breaker.open", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mongodb");
+                            activity?.SetTag("resilience.state", "open");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+                            activity?.SetTag("resilience.break_duration_ms", args.BreakDuration.TotalMilliseconds);
+
                             logger.Warning(
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureWritePolicy),
@@ -110,6 +146,12 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                         },
                         OnClosed = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("mongodb.circuit_breaker.closed", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mongodb");
+                            activity?.SetTag("resilience.state", "closed");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+
                             logger.Warning(
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureWritePolicy),
@@ -120,6 +162,12 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                         },
                         OnHalfOpened = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("mongodb.circuit_breaker.half_open", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mongodb");
+                            activity?.SetTag("resilience.state", "half_open");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+
                             logger.Warning(
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureWritePolicy),
@@ -139,6 +187,14 @@ namespace FTELSRCore.Data.MongoDB.Helpers.Policies
                         UseJitter = true,
                         OnRetry = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("mongodb.retry", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mongodb");
+                            activity?.SetTag("resilience.type", "retry");
+                            activity?.SetTag("retry.attempt", args.AttemptNumber + 1);
+                            activity?.SetTag("retry.max_attempts", writeMaxRetryAttempts);
+                            activity?.SetTag("retry.delay_ms", args.RetryDelay.TotalMilliseconds);
+
                             logger.Warning(
                                 className: nameof(MongoResiliencePolicyFactory),
                                 methodName: nameof(ConfigureWritePolicy),

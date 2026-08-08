@@ -68,9 +68,9 @@ namespace FTELSRCore.Infrastructure.MiddleWares
                         }
                     case CustomException customerException:
                         {
-                            response.StatusCode = customerException.Code;
                             responseModel.Code = customerException.Code;
-                            responseModel.Status = customerException.Status;
+                            response.StatusCode = customerException.Code;
+                            responseModel.Status = customerException.Code.ConvertHttpStatusCodeCodeByName();
                             break;
                         }
                     default:

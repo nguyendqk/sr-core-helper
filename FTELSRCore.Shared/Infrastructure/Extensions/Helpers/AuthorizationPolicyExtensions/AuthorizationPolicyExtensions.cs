@@ -11,7 +11,8 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.AuthorizationPolicyExtens
                 builder.RequireAuthenticatedUser()
                 .RequireAssertion(
                     context => context.User.HasClaim(
-                        c => c.Type == ClaimTypesConstant.Permissions && c.Value.Contains(authorizationPolicy)));
+                        c => c.Type.Equals(ClaimTypesConstant.Permissions)
+                            && c.Value.Any(value => value.Equals(authorizationPolicy))));
             };
         }
     }

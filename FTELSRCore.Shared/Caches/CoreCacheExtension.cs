@@ -7,7 +7,7 @@ namespace FTELSRCore.Caches
 {
     public class CoreCacheExtension(IFusionCache fusionCache, ILogger<CoreCacheExtension> logger) : ICoreCacheExtension
     {
-        private readonly ActivitySource _activitySource = new("FTELSRCore.Caches.CoreCacheExtension");
+        private readonly ActivitySource _activitySource = new(OpenTelemetryConstant.CoreCacheActivitySource);
 
         #region ::::::::::::::::: GET :::::::::::::::::
 
@@ -34,7 +34,7 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using Activity activity = _activitySource.StartActivity("cache.get");
+            using Activity activity = _activitySource.StartActivity("cache.get", ActivityKind.Internal);
 
             activity.SetTag("cache.key", key);
             activity.SetTag("cache.name", nameof(GetOrCreateAsync));
@@ -220,7 +220,7 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using Activity activity = _activitySource.StartActivity("cache.get");
+            using Activity activity = _activitySource.StartActivity("cache.get", ActivityKind.Internal);
 
             activity.SetTag("cache.key", key);
             activity.SetTag("cache.name", nameof(GetCacheByKeyAsync));
@@ -333,7 +333,7 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using Activity activity = _activitySource.StartActivity("cache.get");
+            using Activity activity = _activitySource.StartActivity("cache.set", ActivityKind.Internal);
 
             activity.SetTag("cache.key", key);
             activity.SetTag("cache.name", nameof(SetCacheByKeyAsync));
@@ -415,7 +415,7 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using Activity activity = _activitySource.StartActivity("cache.get");
+            using Activity activity = _activitySource.StartActivity("cache.set", ActivityKind.Internal);
 
             activity.SetTag("cache.key", key);
             activity.SetTag("cache.name", nameof(SetCacheByKeyAsync));
@@ -491,7 +491,7 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using Activity activity = _activitySource.StartActivity("cache.get");
+            using Activity activity = _activitySource.StartActivity("cache.clear", ActivityKind.Internal);
 
             activity.SetTag("cache.key", string.Join(DelimiterConstant.CHAR_COMMA, keys));
             activity.SetTag("cache.name", nameof(ClearAllCacheAsync));
@@ -535,7 +535,7 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            using Activity activity = _activitySource.StartActivity("cache.get");
+            using Activity activity = _activitySource.StartActivity("cache.clear", ActivityKind.Internal);
 
             activity.SetTag("cache.key", key);
             activity.SetTag("cache.name", nameof(ClearCacheAsync));

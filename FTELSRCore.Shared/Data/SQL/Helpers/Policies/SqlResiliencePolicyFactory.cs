@@ -3,12 +3,15 @@ using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Net.Sockets;
 
 namespace FTELSRCore.Data.SQL.Helpers.Policies
 {
     public class SqlResiliencePolicyFactory
     {
+        private static readonly ActivitySource ActivitySource = new(OpenTelemetryConstant.SqlResilienceActivitySource);
+
         /// <summary>
         /// SQL errors cần retry (connection + transient app-level)
         /// </summary>
@@ -62,6 +65,13 @@ namespace FTELSRCore.Data.SQL.Helpers.Policies
                         BreakDuration = TimeSpan.FromSeconds(20),
                         OnOpened = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("sql.circuit_breaker.open", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mssql");
+                            activity?.SetTag("resilience.state", "open");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+                            activity?.SetTag("resilience.break_duration_ms", args.BreakDuration.TotalMilliseconds);
+
                             logger.Warning(
                                 className: nameof(SqlResiliencePolicyFactory),
                                 methodName: nameof(ConfigureReadPolicy),
@@ -72,6 +82,12 @@ namespace FTELSRCore.Data.SQL.Helpers.Policies
                         },
                         OnClosed = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("sql.circuit_breaker.closed", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mssql");
+                            activity?.SetTag("resilience.state", "closed");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+
                             logger.Warning(
                                 className: nameof(SqlResiliencePolicyFactory),
                                 methodName: nameof(ConfigureReadPolicy),
@@ -81,6 +97,12 @@ namespace FTELSRCore.Data.SQL.Helpers.Policies
                         },
                         OnHalfOpened = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("sql.circuit_breaker.half_open", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mssql");
+                            activity?.SetTag("resilience.state", "half_open");
+                            activity?.SetTag("resilience.type", "circuit_breaker");
+
                             logger.Warning(
                                 className: nameof(SqlResiliencePolicyFactory),
                                 methodName: nameof(ConfigureReadPolicy),
@@ -99,6 +121,14 @@ namespace FTELSRCore.Data.SQL.Helpers.Policies
                         UseJitter = true,
                         OnRetry = args =>
                         {
+                            using Activity activity = ActivitySource.StartActivity("sql.retry", ActivityKind.Internal);
+
+                            activity?.SetTag("db.system", "mssql");
+                            activity?.SetTag("retry.max_attempts", 3);
+                            activity?.SetTag("resilience.type", "retry");
+                            activity?.SetTag("retry.attempt", args.AttemptNumber + 1);
+                            activity?.SetTag("retry.delay_ms", args.RetryDelay.TotalMilliseconds);
+
                             logger.Warning(
                                 className: nameof(SqlResiliencePolicyFactory),
                                 methodName: nameof(ConfigureReadPolicy),
