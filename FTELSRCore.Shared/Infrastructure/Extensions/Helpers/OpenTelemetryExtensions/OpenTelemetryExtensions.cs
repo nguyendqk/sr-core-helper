@@ -1,9 +1,10 @@
-﻿using OpenTelemetry.Resources;
+﻿using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace FTELSRCore.Infrastructure.Extensions.Helpers.OpenTelemetryExtensions
 {
-    public static class OpenTelemetryExtensions
+    public static partial class OpenTelemetryExtensions
     {
         public static TracerProviderBuilder AddFTELSRTracing(
             this TracerProviderBuilder builder, TracingFTELSRModel model)
@@ -35,6 +36,29 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.OpenTelemetryExtensions
         }
 
         public class TracingFTELSRModel
+        {
+            public string ServiceName { get; set; }
+        }
+    }
+
+    public static partial class OpenTelemetryExtensions
+    {
+        public static MeterProviderBuilder AddFTELSRMetrics(
+            this MeterProviderBuilder builder, MetricFTELSRModel model)
+        {
+            return builder
+                .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
+                .AddMeter(names: model.ServiceName)
+                .AddMeter(names: OpenTelemetryConstant.CoreCacheActivitySource)
+                .AddMeter(names: OpenTelemetryConstant.LoggingBehaviorActivitySource)
+                .ConfigureResource(resource =>
+                {
+                    resource.AddService(model.ServiceName);
+                });
+        }
+
+        public class MetricFTELSRModel
         {
             public string ServiceName { get; set; }
         }

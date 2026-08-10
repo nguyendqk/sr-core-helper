@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using Serilog.Context;
+using System.Diagnostics;
 
 namespace FTELSRCore.Infrastructure.MiddleWares
 {
@@ -17,7 +18,12 @@ namespace FTELSRCore.Infrastructure.MiddleWares
             }
             else
             {
-                correlationId = Guid.NewGuid().ToString("N");
+                correlationId = Activity.Current?.TraceId.ToString();
+
+                if (string.IsNullOrWhiteSpace(correlationId))
+                {
+                    correlationId = Guid.NewGuid().ToString("N");
+                }
 
                 httpContext.Request.Headers[HeaderConstant.CorrelationIdHeaderKey] = correlationId;
             }

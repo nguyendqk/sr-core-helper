@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning.ApiExplorer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 
@@ -20,11 +20,6 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SwaggerExtensions
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.ApiKey,
             Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-            Reference = new OpenApiReference
-            {
-                Id = RoutePrefixToken,
-                Type = ReferenceType.SecurityScheme
-            }
         };
 
         public void Configure(SwaggerGenOptions options)
@@ -52,11 +47,10 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SwaggerExtensions
                 }
             }
 
-            options.AddSecurityRequirement(
-               new OpenApiSecurityRequirement
-                   {
-                        { _securityScheme, [RoutePrefixToken] }
-                   });
+            options.AddSecurityRequirement(document => new()
+            {
+                [new OpenApiSecuritySchemeReference(RoutePrefixToken, document)] = []
+            });
 
             options.AddSecurityDefinition(RoutePrefixToken, _securityScheme);
 
@@ -66,15 +60,14 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SwaggerExtensions
 
         private OpenApiInfo CreateInfoForApiVersion(ApiVersionDescription description)
         {
-            Uri url = new(uriString: "https://opensource.org/licenses/MIT");
             OpenApiInfo info = new()
             {
                 Version = description.ApiVersion.ToString(),
                 Title = $"{_userAgent} - {description.GroupName.ToUpper()}",
                 License = new OpenApiLicense
                 {
-                    Url = url,
-                    Name = "MIT License"
+                    Name = "MIT License",
+                    Url = new(uriString: "https://opensource.org/licenses/MIT")
                 }
             };
 

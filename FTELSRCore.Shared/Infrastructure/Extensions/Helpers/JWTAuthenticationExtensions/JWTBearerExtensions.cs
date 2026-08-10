@@ -122,7 +122,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                         }
                                     default:
                                         {
-                                            result.Messages = [JsonConvert.SerializeObject(context.Exception)];
+                                            result.Messages = [context.Exception.Message];
 
                                             return context.Response.WriteAsJsonAsync(result);
                                         }

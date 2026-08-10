@@ -38,16 +38,17 @@ namespace FTELSRCore.Infrastructure.MiddleWares
                     {
                         message.AppendLine($"[RequestBody]: {requestBody}");
                     }
-                }
 
-                if (elapseds >= 10)
+                    logger.Warning(nameof(MeasureExecutionTimeMiddleWare), nameof(Invoke),
+                        message: $"[#SR{httpContext.Response.StatusCode}] Request took {elapsedMs} milliseconds for {message}");
+                }
+                else if (elapseds >= 10)
                 {
                     logger.Warning(nameof(MeasureExecutionTimeMiddleWare), nameof(Invoke),
                         message: $"[PERFORMANCE] Long Running Request took {elapsedMs} milliseconds for {message}");
                 }
 
-                logger.Response(className: nameof(MeasureExecutionTimeMiddleWare), methodName: nameof(Invoke),
-                    latency: elapsedMs, message: message.ToString());
+                logger.Response(className: nameof(MeasureExecutionTimeMiddleWare), methodName: nameof(Invoke), latency: elapsedMs, message: message);
             }
         }
     }

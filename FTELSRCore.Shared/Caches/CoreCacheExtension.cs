@@ -36,8 +36,8 @@ namespace FTELSRCore.Caches
 
             using Activity activity = _activitySource.StartActivity("cache.get", ActivityKind.Internal);
 
-            activity.SetTag("cache.key", key);
-            activity.SetTag("cache.name", nameof(GetOrCreateAsync));
+            activity?.SetTag("cache.key", key);
+            activity?.SetTag("cache.name", nameof(GetOrCreateAsync));
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -222,8 +222,8 @@ namespace FTELSRCore.Caches
 
             using Activity activity = _activitySource.StartActivity("cache.get", ActivityKind.Internal);
 
-            activity.SetTag("cache.key", key);
-            activity.SetTag("cache.name", nameof(GetCacheByKeyAsync));
+            activity?.SetTag("cache.key", key);
+            activity?.SetTag("cache.name", nameof(GetCacheByKeyAsync));
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -335,8 +335,8 @@ namespace FTELSRCore.Caches
 
             using Activity activity = _activitySource.StartActivity("cache.set", ActivityKind.Internal);
 
-            activity.SetTag("cache.key", key);
-            activity.SetTag("cache.name", nameof(SetCacheByKeyAsync));
+            activity?.SetTag("cache.key", key);
+            activity?.SetTag("cache.name", nameof(SetCacheByKeyAsync));
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -417,8 +417,8 @@ namespace FTELSRCore.Caches
 
             using Activity activity = _activitySource.StartActivity("cache.set", ActivityKind.Internal);
 
-            activity.SetTag("cache.key", key);
-            activity.SetTag("cache.name", nameof(SetCacheByKeyAsync));
+            activity?.SetTag("cache.key", key);
+            activity?.SetTag("cache.name", nameof(SetCacheByKeyAsync));
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -493,8 +493,8 @@ namespace FTELSRCore.Caches
 
             using Activity activity = _activitySource.StartActivity("cache.clear", ActivityKind.Internal);
 
-            activity.SetTag("cache.key", string.Join(DelimiterConstant.CHAR_COMMA, keys));
-            activity.SetTag("cache.name", nameof(ClearAllCacheAsync));
+            activity?.SetTag("cache.key", string.Join(DelimiterConstant.CHAR_COMMA, keys));
+            activity?.SetTag("cache.name", nameof(ClearAllCacheAsync));
 
             try
             {
@@ -537,8 +537,8 @@ namespace FTELSRCore.Caches
 
             using Activity activity = _activitySource.StartActivity("cache.clear", ActivityKind.Internal);
 
-            activity.SetTag("cache.key", key);
-            activity.SetTag("cache.name", nameof(ClearCacheAsync));
+            activity?.SetTag("cache.key", key);
+            activity?.SetTag("cache.name", nameof(ClearCacheAsync));
 
             if (string.IsNullOrWhiteSpace(key))
             {

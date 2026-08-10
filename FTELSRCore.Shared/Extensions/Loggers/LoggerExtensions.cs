@@ -414,6 +414,35 @@ namespace FTELSRCore.Extensions.Loggers
             _kafka(logger, className, methodName, topic, message, e);
         }
 
+        public static void KafkaErrorException(this ILogger logger, string className, string methodName, Exception e, object message = null, string topic = "")
+        {
+            switch (!string.IsNullOrWhiteSpace(topic))
+            {
+                case true:
+                    {
+                        logger.Log(
+                            LogLevel.Error,
+                            new EventId(EventIds.KafkaErrorResult, nameof(KafkaErrorResult)),
+                            "------------KAFKA------------ {ClassName} - {MethodName} - [Topic:{Topic} - ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
+                            className, methodName, topic,
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
+
+                        break;
+                    }
+                case false:
+                    {
+                        logger.Log(
+                            LogLevel.Error,
+                            new EventId(EventIds.KafkaErrorResult, nameof(KafkaErrorResult)),
+                            "------------KAFKA------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
+                            className, methodName,
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
+
+                        break;
+                    }
+            }
+        }
+
         #endregion +++++++++++++++++ KAFKA +++++++++++++++++
 
         #region +++++++++++++++++ ERORR +++++++++++++++++

@@ -16,7 +16,7 @@ namespace FTELSRCore.CQRS.Behaviors
         {
             using Activity activity = ActivitySource.StartActivity(typeof(TRequest).Name, ActivityKind.Internal);
 
-            activity.SetTag("mediatr.name", typeof(TRequest).Name);
+            activity?.SetTag("mediatr.name", typeof(TRequest).Name);
 
             try
             {

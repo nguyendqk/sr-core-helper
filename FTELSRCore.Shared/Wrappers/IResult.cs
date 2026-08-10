@@ -96,7 +96,7 @@ namespace FTELSRCore.Wrappers
         public string Request_Id { get; set; }
 
         /// <summary>
-        /// ID trace cross-system (W3C Activity.TraceId hoặc fallback x-correlation-id).
+        /// ID trace cross-system (W3C activity?.TraceId hoặc fallback x-correlation-id).
         /// </summary>
         ///
         [JsonPropertyName("trace_id")]
