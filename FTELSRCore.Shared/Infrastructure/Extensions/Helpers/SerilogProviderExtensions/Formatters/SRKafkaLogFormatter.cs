@@ -93,7 +93,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
 
                 LatencyRating = GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.LatencyRatingPropertyName),
 
-                ResponseTimeMs = long.TryParse(GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.ResponseTimeMsPropertyName), out var latency) ? latency : 0,
+                ResponseTimeMs = long.TryParse(GetLogEventPropertyValue(logEvent.Properties, SerilogConstant.ResponseTimeMsPropertyName), out var latency) ? latency : null,
 
                 #endregion ::::::::::::: Dùng cho kiểm tra kết nối API :::::::::::::
             };
@@ -253,20 +253,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
             /// </summary>
             ///
             [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
-            public long ResponseTimeMs { get; set; }
-
-            /// <summary>
-            /// Kích thước request body (bytes)
-            /// </summary>
-            [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
-            public long RequestSize { get; set; }
-
-            /// <summary>
-            /// Kích thước response body (bytes)
-            /// </summary>
-            ///
-            [JsonIgnore(Condition = JsonIgnoreCondition.Never)]
-            public long ResponseSize { get; set; }
+            public long? ResponseTimeMs { get; set; }
 
             /// <summary>
             /// Tình trạng xử lý của API

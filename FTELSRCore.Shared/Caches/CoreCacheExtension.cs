@@ -1,4 +1,5 @@
 ﻿using FTELSRCore.Caches.Helpers;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 using ZiggyCreatures.Caching.Fusion;
@@ -38,6 +39,8 @@ namespace FTELSRCore.Caches
 
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(GetOrCreateAsync));
+
+            if (activity is { } a) a.DisplayName = $"GET [{key}]";
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -225,6 +228,8 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(GetCacheByKeyAsync));
 
+            if (activity is { } a) a.DisplayName = $"GET [{key}]";
+
             if (string.IsNullOrWhiteSpace(key))
             {
                 return string.Empty;
@@ -338,6 +343,8 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(SetCacheByKeyAsync));
 
+            if (activity is { } a) a.DisplayName = $"SET [{key}]";
+
             if (string.IsNullOrWhiteSpace(key))
             {
                 return;
@@ -420,6 +427,8 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(SetCacheByKeyAsync));
 
+            if (activity is { } a) a.DisplayName = $"SET [{key}]";
+
             if (string.IsNullOrWhiteSpace(key))
             {
                 return;
@@ -496,6 +505,8 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", string.Join(DelimiterConstant.CHAR_COMMA, keys));
             activity?.SetTag("cache.name", nameof(ClearAllCacheAsync));
 
+            if (activity is { } a) a.DisplayName = $"DELETE [{string.Join(DelimiterConstant.CHAR_COMMA, keys)}]";
+
             try
             {
                 if (keys.IsNullOrEmpty())
@@ -539,6 +550,8 @@ namespace FTELSRCore.Caches
 
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(ClearCacheAsync));
+
+            if (activity is { } a) a.DisplayName = $"DELETE [{key}]";
 
             if (string.IsNullOrWhiteSpace(key))
             {
