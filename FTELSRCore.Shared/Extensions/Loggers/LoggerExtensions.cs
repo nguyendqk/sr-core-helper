@@ -373,15 +373,16 @@ namespace FTELSRCore.Extensions.Loggers
             string uri,
             object message,
             string systemOwner = "",
+            string uriWithQuery = "",
             DirectionType direction = DirectionType.Inbound)
         {
             logger.Log(
                 LogLevel.Information,
                 new EventId(EventIds.HttpResult, nameof(HttpResultWithTracing)),
                 "------------HTTP------------ {ClassName} - {MethodName} " +
-                "- [HttpMethod:{HttpMethod} :: Endpoint:{Endpoint} :: SystemOwner:{SystemOwner}({Direction}) :: HttpStatusCode:{HttpStatusCode} :: Latency:{ResponseTimeMs}ms -> LatencyRating:{LatencyRating}] " +
+                "- [HttpMethod:{HttpMethod} :: Endpoint:{Endpoint}.{EndpointWithQuery} :: SystemOwner:{SystemOwner}({Direction}) :: HttpStatusCode:{HttpStatusCode} :: Latency:{ResponseTimeMs}ms -> LatencyRating:{LatencyRating}] " +
                 "- [ErrorCategory: {ErrorCategory}] -- response HTTP result: {Message}",
-                className, methodName, httpMethod, uri, systemOwner, direction, statusCode,
+                className, methodName, httpMethod, uri, uriWithQuery, systemOwner, direction, statusCode,
                 responseTimeMs, LatencyRatingData(latency: responseTimeMs),
                 LoggerErrorCategoriesHelper.ApiCategory.ResolveCategory(statusCode: (int.TryParse(statusCode, out var statusCodeToInt) ? statusCodeToInt : 0)), message?.ToJSon());
         }
