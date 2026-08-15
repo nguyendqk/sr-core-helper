@@ -40,7 +40,7 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(GetOrCreateAsync));
 
-            if (activity is { } a) a.DisplayName = $"GET [{key}]";
+            if (activity is { } a) a.DisplayName = $"GET {key}";
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -228,7 +228,7 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(GetCacheByKeyAsync));
 
-            if (activity is { } a) a.DisplayName = $"GET [{key}]";
+            if (activity is { } a) a.DisplayName = $"GET {key}";
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -343,7 +343,7 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(SetCacheByKeyAsync));
 
-            if (activity is { } a) a.DisplayName = $"SET [{key}]";
+            if (activity is { } a) a.DisplayName = $"SET {key}";
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -427,7 +427,7 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(SetCacheByKeyAsync));
 
-            if (activity is { } a) a.DisplayName = $"SET [{key}]";
+            if (activity is { } a) a.DisplayName = $"SET {key}";
 
             if (string.IsNullOrWhiteSpace(key))
             {
@@ -500,12 +500,14 @@ namespace FTELSRCore.Caches
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            keys = keys?.Distinct()?.ToArray();
+
             using Activity activity = _activitySource.StartActivity("cache.clear", ActivityKind.Internal);
 
-            activity?.SetTag("cache.key", string.Join(DelimiterConstant.CHAR_COMMA, keys));
             activity?.SetTag("cache.name", nameof(ClearAllCacheAsync));
+            activity?.SetTag("cache.key", string.Join(", ", keys));
 
-            if (activity is { } a) a.DisplayName = $"DELETE [{string.Join(DelimiterConstant.CHAR_COMMA, keys)}]";
+            if (activity is { } a) a.DisplayName = $"DELETE {string.Join(", ", keys)}";
 
             try
             {
@@ -551,7 +553,7 @@ namespace FTELSRCore.Caches
             activity?.SetTag("cache.key", key);
             activity?.SetTag("cache.name", nameof(ClearCacheAsync));
 
-            if (activity is { } a) a.DisplayName = $"DELETE [{key}]";
+            if (activity is { } a) a.DisplayName = $"DELETE {key}";
 
             if (string.IsNullOrWhiteSpace(key))
             {

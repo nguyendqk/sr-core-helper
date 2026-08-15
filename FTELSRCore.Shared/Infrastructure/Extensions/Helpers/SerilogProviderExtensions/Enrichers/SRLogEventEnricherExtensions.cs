@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using Serilog.Core;
 using Serilog.Events;
+using System.Diagnostics;
 using System.Security.Claims;
 using System.Security.Principal;
 
@@ -31,11 +33,21 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
                 return;
             }
 
-            string correlationId = context.Request.Headers[HeaderConstant.CorrelationIdHeaderKey].FirstOrDefault();
+            string correlationId;
 
-            if (string.IsNullOrEmpty(correlationId))
+            if (context.Request.Headers.TryGetValue(
+                    key: HeaderConstant.CorrelationIdHeaderKey, out StringValues correlationIds))
             {
-                correlationId = context.TraceIdentifier;
+                correlationId = correlationIds.FirstOrDefault();
+            }
+            else
+            {
+                correlationId = Activity.Current?.TraceId.ToString();
+
+                if (string.IsNullOrWhiteSpace(correlationId))
+                {
+                    correlationId = Guid.NewGuid().ToString("N");
+                }
             }
 
             AddPropertyIfAbsentInSerilog(logEvent: logEvent,

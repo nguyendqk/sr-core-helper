@@ -17,6 +17,7 @@ namespace FTELSRCore.Data.MongoDB.Helpers
         /// (và mở pool kết nối mới) ở mỗi lần gọi IsCheckConnection.
         /// </summary>
         private static readonly ConcurrentDictionary<string, MongoClient> _healthCheckClients = new();
+
         /// <summary>
         ///
         /// </summary>
@@ -60,55 +61,6 @@ namespace FTELSRCore.Data.MongoDB.Helpers
             settings.MinConnectionPoolSize = 100;
 
             return settings;
-        }
-
-        public enum ReadMode
-        {
-            Custom,             // Custom settings
-            StrongConsistency,   // Majority + Primary
-            HighPerformance,     // Local + SecondaryPreferred
-            Balanced             // Majority + SecondaryPreferred
-        }
-
-        private static IMongoCollection<TTable> GetCollection<TTable>(
-            IMongoDatabase dbContext, string collectionName, ReadMode readMode = ReadMode.StrongConsistency, MongoCollectionSettings settings = null) where TTable : class
-        {
-            MongoCollectionSettings collectionSettings =
-                settings ?? new MongoCollectionSettings();
-
-            switch (readMode)
-            {
-                case ReadMode.StrongConsistency:
-                    {
-                        collectionSettings.ReadConcern = ReadConcern.Majority;
-
-                        collectionSettings.ReadPreference = ReadPreference.Primary;
-
-                        break;
-                    }
-                case ReadMode.HighPerformance:
-                    {
-                        collectionSettings.ReadConcern = ReadConcern.Local;
-
-                        collectionSettings.ReadPreference = ReadPreference.SecondaryPreferred;
-
-                        break;
-                    }
-                case ReadMode.Balanced:
-                    {
-                        collectionSettings.ReadConcern = ReadConcern.Majority;
-
-                        collectionSettings.ReadPreference = ReadPreference.SecondaryPreferred;
-
-                        break;
-                    }
-                case ReadMode.Custom:
-                    {
-                        break;
-                    }
-            }
-
-            return dbContext.GetCollection<TTable>(name: collectionName, settings: collectionSettings);
         }
 
         /// <summary>

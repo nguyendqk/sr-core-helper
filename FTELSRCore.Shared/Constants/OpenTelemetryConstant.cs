@@ -5,6 +5,8 @@
     {
         public const string CoreCacheActivitySource = "FTELSRCore.Caches.CoreCacheExtension";
 
+        public const string MongoDBActivitySource = "MongoDB.Driver.Core.Extensions.DiagnosticSources";
+
         public const string LoggingBehaviorActivitySource = "FTELSRCore.CQRS.Behaviors.LoggingBehavior";
 
         public const string SqlResilienceActivitySource = "FTELSRCore.Data.SQL.Helpers.Policies.SqlResiliencePolicyFactory";

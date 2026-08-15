@@ -40,7 +40,7 @@ namespace FTELSRCore.Infrastructure.MiddleWares
                     return Task.CompletedTask;
                 });
 
-            using (LogContext.PushProperty(name: HeaderConstant.CorrelationIdHeaderKey, value: correlationId))
+            using (LogContext.PushProperty(name: SerilogConstant.CorrelationIdPropertyName, value: correlationId))
             {
                 if (httpContext.Response.HasStarted)
                 {

@@ -48,7 +48,7 @@ namespace FTELSRCore.Infrastructure.MiddleWares
                         message: $"[PERFORMANCE] Long Running Request took {elapsedMs} milliseconds for {message}");
                 }
 
-                logger.Response(className: nameof(MeasureExecutionTimeMiddleWare), methodName: nameof(Invoke), latency: elapsedMs, message: message);
+                logger.Response(className: nameof(MeasureExecutionTimeMiddleWare), methodName: nameof(Invoke), latency: elapsedMs, message: message.ToString());
             }
         }
     }
