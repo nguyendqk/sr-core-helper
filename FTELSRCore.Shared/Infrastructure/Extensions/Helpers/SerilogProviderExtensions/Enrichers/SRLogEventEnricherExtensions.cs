@@ -33,6 +33,24 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
                 return;
             }
 
+            string ipAddress = string.Empty;
+
+            string getIPAddress = ConvertHelpers.GetClientIpAddress(context);
+
+            if (!string.IsNullOrWhiteSpace(getIPAddress))
+            {
+                ipAddress = getIPAddress;
+            }
+            else
+            {
+                ipAddress = context.Connection.RemoteIpAddress?.ToString();
+            }
+
+            AddPropertyIfAbsentInSerilog(logEvent: logEvent,
+                                         propertyFactory: propertyFactory,
+                                         serilogName: SerilogConstant.ClientIpPropertyName,
+                                         data: ipAddress);
+
             string correlationId;
 
             if (context.Request.Headers.TryGetValue(
@@ -95,7 +113,7 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions
                 username = userName;
             }
 
-            string userInfo = $"[User: {username} - Roles: {roleName} - RoleData: {roleDataName} - IP: {context!.Connection.RemoteIpAddress}:{context!.Connection.LocalPort}]";
+            string userInfo = $"[User: {username} - Roles: {roleName} - RoleData: {roleDataName} - IP: {ipAddress}]";
 
             AddPropertyIfAbsentInSerilog(logEvent: logEvent,
                                          propertyFactory: propertyFactory,

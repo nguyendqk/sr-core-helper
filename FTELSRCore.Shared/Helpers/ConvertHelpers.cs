@@ -69,38 +69,20 @@ namespace FTELSRCore.Helpers
 
                     if (!string.IsNullOrWhiteSpace(forPart))
                     {
-                        var ip = forPart.Substring(4).Trim('"', '[', ']');
-
-                        if (IPAddress.TryParse(ip, out _))
-                        {
-                            return ip;
-                        }
+                        return forPart.Substring(4).Trim('"', '[', ']');
                     }
                 }
 
                 // 2. X-Forwarded-For
                 if (httpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var xff))
                 {
-                    var ip = xff.ToString()
-                                .Split(',')
-                                .FirstOrDefault()?
-                                .Trim();
-
-                    if (IPAddress.TryParse(ip, out _))
-                    {
-                        return ip;
-                    }
+                    return xff.ToString().Split(',').FirstOrDefault()?.Trim();
                 }
 
                 // 3. X-Real-IP
                 if (httpContext.Request.Headers.TryGetValue("X-Real-IP", out var realIp))
                 {
-                    var ip = realIp.ToString();
-
-                    if (IPAddress.TryParse(ip, out _))
-                    {
-                        return ip;
-                    }
+                    return realIp.ToString();
                 }
 
                 // 4. Remote IP
