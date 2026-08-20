@@ -8,6 +8,11 @@ using System.Net.Sockets;
 
 namespace FTELSRCore.Data.SQL.Helpers.Policies
 {
+    /// <summary>
+    /// Factory xây dựng các Polly resilience pipeline (circuit breaker + retry) áp dụng cho kết nối SQL Server,
+    /// với hai cấu hình riêng cho luồng đọc (<see cref="ConfigureReadPolicy"/>) và luồng ghi
+    /// (<see cref="ConfigureWritePolicy"/>).
+    /// </summary>
     public class SqlResiliencePolicyFactory
     {
         private static readonly ActivitySource ActivitySource = new(OpenTelemetryConstant.SqlResilienceActivitySource);
@@ -208,11 +213,15 @@ namespace FTELSRCore.Data.SQL.Helpers.Policies
         }
 
         /// <summary>
-        ///
+        /// Xác định một ngoại lệ có nên được retry hay không. Nếu bóc tách được <see cref="SqlException"/>,
+        /// kiểm tra mã lỗi thuộc <c>RetryableSqlErrors</c> (khi <paramref name="handleAllTransient"/> là true,
+        /// dùng cho read) hoặc chỉ <c>ConnectionLevelSqlErrors</c> (khi false, dùng cho write). Ngoài SqlException,
+        /// <see cref="SocketException"/> luôn được coi là retryable; khi <paramref name="handleAllTransient"/> là
+        /// true còn chấp nhận thêm <see cref="TimeoutException"/> và các <see cref="DbException"/> khác.
         /// </summary>
-        /// <param name="ex"></param>
-        /// <param name="handleAllTransient"></param>
-        /// <returns></returns>
+        /// <param name="ex">Ngoại lệ cần kiểm tra.</param>
+        /// <param name="handleAllTransient">true để xử lý rộng các lỗi transient (dùng cho read); false để chỉ xử lý lỗi connection-level (dùng cho write).</param>
+        /// <returns>true nếu ngoại lệ được coi là có thể retry.</returns>
         private static bool IsRetryable(Exception ex, bool handleAllTransient)
         {
             if (UnwrapSqlException(ex) is { } sqlEx)
@@ -233,10 +242,12 @@ namespace FTELSRCore.Data.SQL.Helpers.Policies
         }
 
         /// <summary>
-        ///
+        /// Xác định một ngoại lệ có phải là sự cố ở mức connection/server hay không (dùng để kích hoạt circuit
+        /// breaker). Nếu bóc tách được <see cref="SqlException"/>, kiểm tra mã lỗi thuộc <c>ConnectionLevelSqlErrors</c>;
+        /// ngược lại coi <see cref="SocketException"/> cũng là lỗi connection-level.
         /// </summary>
-        /// <param name="ex"></param>
-        /// <returns></returns>
+        /// <param name="ex">Ngoại lệ cần kiểm tra.</param>
+        /// <returns>true nếu ngoại lệ là sự cố connection/server.</returns>
         private static bool IsConnectionLevel(Exception ex)
         {
             if (UnwrapSqlException(ex) is { } sqlEx)

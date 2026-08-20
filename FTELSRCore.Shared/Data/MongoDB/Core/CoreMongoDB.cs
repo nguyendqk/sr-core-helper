@@ -408,13 +408,13 @@ namespace FTELSRCore.Data.MongoDB.Core
         }
 
         /// <summary>
-        ///
+        /// Tìm tất cả bản ghi theo bộ lọc, kết hợp thêm điều kiện trạng thái xóa mềm, và chuyển đổi sang kiểu DTO.
         /// </summary>
-        /// <typeparam name="TDto"></typeparam>
-        /// <param name="filter"></param>
-        /// <param name="isDeleted"></param>
+        /// <typeparam name="TDto">Kiểu DTO mà dữ liệu sẽ được chuyển đổi sang.</typeparam>
+        /// <param name="filter">Biểu thức lọc bản ghi.</param>
+        /// <param name="isDeleted">true: chỉ lấy bản ghi đã xóa mềm; false: chỉ lấy bản ghi chưa xóa mềm.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Danh sách bản ghi kiểu TDto thỏa điều kiện lọc và trạng thái xóa mềm.</returns>
         public virtual async Task<List<TDto>> FindAllSortDeletedAsync<TDto>(
             Expression<Func<TTable, bool>> filter, bool isDeleted = false, CancellationToken cancellationToken = default) where TDto : class
         {
@@ -460,12 +460,12 @@ namespace FTELSRCore.Data.MongoDB.Core
         }
 
         /// <summary>
-        ///
+        /// Tìm tất cả bản ghi theo bộ lọc, kết hợp thêm điều kiện trạng thái xóa mềm (AND với <c>isDeleted</c>).
         /// </summary>
-        /// <param name="filter"></param>
-        /// <param name="isDeleted"></param>
+        /// <param name="filter">Biểu thức lọc bản ghi.</param>
+        /// <param name="isDeleted">true: chỉ lấy bản ghi đã xóa mềm; false: chỉ lấy bản ghi chưa xóa mềm.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Danh sách bản ghi kiểu TTable thỏa điều kiện lọc và trạng thái xóa mềm.</returns>
         public virtual async Task<List<TTable>> FindAllSortDeletedAsync(
            Expression<Func<TTable, bool>> filter, bool isDeleted = false, CancellationToken cancellationToken = default)
         {
@@ -511,13 +511,13 @@ namespace FTELSRCore.Data.MongoDB.Core
         }
 
         /// <summary>
-        ///
+        /// Tìm một bản ghi duy nhất theo bộ lọc, kết hợp thêm điều kiện trạng thái xóa mềm, chuyển đổi sang kiểu DTO.
         /// </summary>
-        /// <typeparam name="TDto"></typeparam>
-        /// <param name="filter"></param>
-        /// <param name="isDeleted"></param>
+        /// <typeparam name="TDto">Kiểu DTO mà dữ liệu sẽ được chuyển đổi sang.</typeparam>
+        /// <param name="filter">Biểu thức lọc bản ghi.</param>
+        /// <param name="isDeleted">true: chỉ lấy bản ghi đã xóa mềm; false: chỉ lấy bản ghi chưa xóa mềm.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Bản ghi duy nhất kiểu TDto hoặc null nếu không tìm thấy.</returns>
         ///
         public virtual async Task<TDto> FindOneSortDeletedAsync<TDto>(
            Expression<Func<TTable, bool>> filter,
@@ -565,12 +565,12 @@ namespace FTELSRCore.Data.MongoDB.Core
         }
 
         /// <summary>
-        ///
+        /// Tìm một bản ghi duy nhất theo bộ lọc, kết hợp thêm điều kiện trạng thái xóa mềm.
         /// </summary>
-        /// <param name="filter"></param>
-        /// <param name="isDeleted"></param>
+        /// <param name="filter">Biểu thức lọc bản ghi.</param>
+        /// <param name="isDeleted">true: chỉ lấy bản ghi đã xóa mềm; false: chỉ lấy bản ghi chưa xóa mềm.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Bản ghi duy nhất kiểu TTable hoặc null nếu không tìm thấy.</returns>
         ///
         public virtual async Task<TTable> FindOneSortDeletedAsync(
            Expression<Func<TTable, bool>> filter, bool isDeleted = false, CancellationToken cancellationToken = default)
@@ -599,7 +599,8 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <param name="entity">Đối tượng chứa thông tin cần cập nhật.</param>
         /// <param name="audit"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns>Trả về true nếu cập nhật thành công, false nếu có lỗi hoặc các tham số không hợp lệ.</returns>
+        /// <returns>Trả về true nếu cập nhật hoặc tạo mới (upsert) thành công, false nếu có lỗi hoặc tham số không hợp lệ.</returns>
+        /// <remarks>Bật upsert: nếu filter không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         public virtual async Task<bool> IsUpdateOneAsync(
             Expression<Func<TTable, bool>> filter,
@@ -633,7 +634,9 @@ namespace FTELSRCore.Data.MongoDB.Core
                 {
                     UpdateResult result =
                         await _dbWriteContext.Value.UpdateOneAsync(
-                            filter: filter, update: mapUpdateDefinition, cancellationToken: cancellationToken).ConfigureAwait(false);
+                            filter: filter, update: mapUpdateDefinition,
+                            options: new UpdateOptions { IsUpsert = true },
+                            cancellationToken: cancellationToken).ConfigureAwait(false);
 
                     if (result is null)
                     {
@@ -674,7 +677,8 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <param name="updateDefinition">Định nghĩa cập nhật.</param>
         /// <param name="audit">Thông tin audit, nếu có.</param>
         /// <param name="cancellationToken">Token hủy bỏ.</param>
-        /// <returns>Trả về true nếu có bản ghi được cập nhật; ngược lại là false.</returns>
+        /// <returns>Trả về true nếu có bản ghi được cập nhật hoặc tạo mới (upsert); ngược lại là false.</returns>
+        /// <remarks>Bật upsert: nếu filter không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         public virtual async Task<bool> IsUpdateOneAsync(
             Expression<Func<TTable, bool>> filter, UpdateDefinition<TTable> updateDefinition,
@@ -708,6 +712,7 @@ namespace FTELSRCore.Data.MongoDB.Core
                         await _dbWriteContext.Value.UpdateOneAsync(
                             filter: filter,
                             update: updateDefinition,
+                            options: new UpdateOptions { IsUpsert = true },
                             cancellationToken: cancellationToken).ConfigureAwait(false);
 
                     if (result is null)
@@ -749,7 +754,8 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <param name="updateDefinition">Định nghĩa cập nhật.</param>
         /// <param name="audit">Thông tin audit, nếu có.</param>
         /// <param name="cancellationToken">Token hủy bỏ.</param>
-        /// <returns>Trả về true nếu có ít nhất một bản ghi được cập nhật; ngược lại là false.</returns>
+        /// <returns>Trả về true nếu có ít nhất một bản ghi được cập nhật hoặc tạo mới (upsert); ngược lại là false.</returns>
+        /// <remarks>Bật upsert: nếu filter không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         public virtual async Task<bool> IsUpdateManyAsync(
             Expression<Func<TTable, bool>> filter,
@@ -783,6 +789,7 @@ namespace FTELSRCore.Data.MongoDB.Core
                         await _dbWriteContext.Value.UpdateManyAsync(
                             filter: filter,
                             update: updateDefinition,
+                            options: new UpdateOptions { IsUpsert = true },
                             cancellationToken: cancellationToken).ConfigureAwait(false);
 
                     if (result is null)
@@ -825,7 +832,8 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <param name="entity">Dữ liệu cập nhật cho các bản ghi thỏa mãn bộ lọc.</param>
         /// <param name="audit"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns>Trả về <c>true</c> nếu việc cập nhật thành công, <c>false</c> nếu thất bại hoặc có lỗi xảy ra.</returns>
+        /// <returns>Trả về <c>true</c> nếu việc cập nhật hoặc tạo mới (upsert) thành công, <c>false</c> nếu thất bại hoặc có lỗi xảy ra.</returns>
+        /// <remarks>Bật upsert: nếu filter không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         public virtual async Task<bool> IsUpdateManyAsync(
             Expression<Func<TTable, bool>> filter,
@@ -863,6 +871,7 @@ namespace FTELSRCore.Data.MongoDB.Core
                         await _dbWriteContext.Value.UpdateManyAsync(
                             filter: filter,
                             update: mapUpdateDefinition,
+                            options: new UpdateOptions { IsUpsert = true },
                             cancellationToken: cancellationToken).ConfigureAwait(false);
 
                     if (result is null)
@@ -898,12 +907,13 @@ namespace FTELSRCore.Data.MongoDB.Core
         }
 
         /// <summary>
-        ///
+        /// Cập nhật hàng loạt, mỗi phần tử có filter và entity riêng, gộp thành một lệnh BulkWrite (UpdateOneModel).
         /// </summary>
-        /// <param name="entities"></param>
+        /// <param name="entities">Danh sách cặp (filter, entity) — mỗi cặp là một bản ghi cần cập nhật.</param>
         /// <param name="audit"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Trả về true nếu có ít nhất một bản ghi được cập nhật hoặc tạo mới (upsert); ngược lại false.</returns>
+        /// <remarks>Bật upsert: nếu filter của một phần tử không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         public virtual async Task<bool> IsUpdateManyAsync(
             List<(Expression<Func<TTable, bool>> filter, TTable entity)> entities,
@@ -934,7 +944,7 @@ namespace FTELSRCore.Data.MongoDB.Core
                     continue;
                 }
 
-                writeModels.Add(new UpdateOneModel<TTable>(Filter, mapUpdateDefinition));
+                writeModels.Add(new UpdateOneModel<TTable>(Filter, mapUpdateDefinition) { IsUpsert = true });
             }
 
             if (writeModels is null || writeModels.IsNullOrEmpty())
@@ -985,11 +995,13 @@ namespace FTELSRCore.Data.MongoDB.Core
         }
 
         /// <summary>
-        ///
+        /// Cập nhật hàng loạt bằng <see cref="UpdateDefinition{TTable}"/> có sẵn cho từng phần tử, gộp thành một
+        /// lệnh BulkWrite (UpdateOneModel).
         /// </summary>
-        /// <param name="entities"></param>
+        /// <param name="entities">Danh sách cặp (filter, updateDefinition) — mỗi cặp là một bản ghi cần cập nhật.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Trả về true nếu có ít nhất một bản ghi được cập nhật hoặc tạo mới (upsert); ngược lại false.</returns>
+        /// <remarks>Bật upsert: nếu filter của một phần tử không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         public virtual async Task<bool> IsUpdateManyAsync(
             List<(Expression<Func<TTable, bool>> filter, UpdateDefinition<TTable> entity)> entities,
@@ -1009,7 +1021,7 @@ namespace FTELSRCore.Data.MongoDB.Core
 
             foreach ((Expression<Func<TTable, bool>> Filter, UpdateDefinition<TTable> Entity) in entities)
             {
-                writeModels.Add(new UpdateOneModel<TTable>(Filter, Entity));
+                writeModels.Add(new UpdateOneModel<TTable>(Filter, Entity) { IsUpsert = true });
             }
 
             if (writeModels is null || writeModels.IsNullOrEmpty())
@@ -1138,7 +1150,7 @@ namespace FTELSRCore.Data.MongoDB.Core
 
             if (result.IsNullOrEmpty())
             {
-                _logger.FailLogic(nameof(CoreMongoDB<TTable>), nameof(IsCreateOneAsync),
+                _logger.FailLogic(nameof(CoreMongoDB<TTable>), nameof(IsCreateManyAsync),
                     $"Validate {typeof(TTable).Name} with SetDataCreatedDefault is null");
 
                 return false;
@@ -1249,7 +1261,7 @@ namespace FTELSRCore.Data.MongoDB.Core
 
             if (pipeline is null)
             {
-                return null;
+                return [];
             }
 
             options ??= _aggregateOptions;
@@ -1293,7 +1305,7 @@ namespace FTELSRCore.Data.MongoDB.Core
 
             if (pipeline is null)
             {
-                return null;
+                return [];
             }
 
             options ??= _aggregateOptions;
@@ -1339,7 +1351,7 @@ namespace FTELSRCore.Data.MongoDB.Core
 
             if (pipeline is null)
             {
-                return null;
+                return [];
             }
 
             options ??= _aggregateOptions;
@@ -1370,12 +1382,13 @@ namespace FTELSRCore.Data.MongoDB.Core
         }
 
         /// <summary>
-        ///
+        /// Thực thi hàng loạt lệnh ghi tùy ý (Insert/Update/Delete/Replace) trong một lần gọi MongoDB BulkWrite,
+        /// caller tự xây dựng danh sách <see cref="WriteModel{TTable}"/> (bao gồm việc tự bật upsert nếu cần).
         /// </summary>
-        /// <param name="options"></param>
-        /// <param name="requests"></param>
+        /// <param name="requests">Danh sách các lệnh ghi (WriteModel) cần thực thi.</param>
+        /// <param name="options">Tùy chọn BulkWrite, mặc định null.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Trả về true nếu server xác nhận (IsAcknowledged) và có bản ghi khớp hoặc được upsert; ngược lại false.</returns>
         ///
         public virtual async Task<bool> BulkWriteAsync(
             IEnumerable<WriteModel<TTable>> requests, BulkWriteOptions options = null, CancellationToken cancellationToken = default)

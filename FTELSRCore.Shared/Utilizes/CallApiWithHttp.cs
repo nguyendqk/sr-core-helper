@@ -18,15 +18,17 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: GET ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu GET tới <c>option.Uri</c>, tự động build query string từ <typeparamref name="TRequest"/>
+        /// (option.Value) qua <see cref="ParseModelToQueryString"/>, đính kèm Bearer token nếu có, đo thời gian
+        /// thực thi và ghi log tracing (URL/Option/Result) khi hoàn tất.
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (query params), HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> GetAsJSonAsync(
             HttpOptionModel<TRequest> option, ILogger logger,
@@ -133,15 +135,16 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Giống <see cref="GetAsJSonAsync"/> (GET, build query string từ TRequest, Bearer token, đo thời gian,
+        /// log tracing) nhưng trả về thêm <see cref="HttpResponseHeaders"/> của response để caller đọc header nếu cần.
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (query params), HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response, ErrorModel, HttpResponseHeaders) — data/headers null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel, HttpResponseHeaders)> GetAsJSonAndHeaderAsync(
             HttpOptionModel<TRequest> option, ILogger logger,
@@ -248,16 +251,18 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu GET với query string build từ TRequest (dùng <see cref="HttpClientUtilizes.ToQueryString"/>),
+        /// cho phép truyền thêm các header tùy chỉnh — được add trực tiếp vào <c>HttpRequestMessage.Headers</c>
+        /// (không phải <c>DefaultRequestHeaders</c> của client dùng chung).
         /// </summary>
-        /// <param name="option"></param>
-        /// <param name="headers"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (query params), HttpClient.</param>
+        /// <param name="headers">Danh sách header tùy chỉnh cần thêm vào request.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> GetAsJSonCustomHeaderAsync(
             HttpOptionModel<TRequest> option, IEnumerable<KeyValuePair<string, string>> headers, ILogger logger,
@@ -372,15 +377,16 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: POST ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu POST với body dạng <c>application/x-www-form-urlencoded</c> (<see cref="FormUrlEncodedContent"/>)
+        /// từ <c>Dictionary&lt;string, string&gt;</c>. Tự thiết lập BaseAddress/Authorization trên client trước khi gửi.
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (dữ liệu form), Client.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PostFormUrlEncodedAsync(
             HttpOptionModel<Dictionary<string, string>> option, ILogger logger,
@@ -494,15 +500,16 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu POST với body JSON (serialize <c>option.Value</c> bằng <see cref="System.Text.Json.JsonSerializer"/>,
+        /// Content-Type <c>application/json</c>).
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (request body), HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PostAsJSonAsync(
             HttpOptionModel<TRequest> option, ILogger logger,
@@ -610,17 +617,19 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu POST dạng <c>multipart/form-data</c>: đọc toàn bộ nội dung mỗi <see cref="IFormFile"/> vào
+        /// <c>byte[]</c> rồi add làm <see cref="ByteArrayContent"/>, đồng thời duyệt reflection các property khác của
+        /// TRequest (option.Value) để add làm field form bổ sung (mảng string được add từng item riêng).
         /// </summary>
-        /// <param name="option"></param>
-        /// <param name="files"></param>
-        /// <param name="fileParameterName"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (field form bổ sung), HttpClient.</param>
+        /// <param name="files">Danh sách file cần upload; file rỗng (Length == 0) sẽ bị bỏ qua.</param>
+        /// <param name="fileParameterName">Tên field form dùng cho phần nội dung file.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PostAsFileAsync(
             HttpOptionModel<TRequest> option, IEnumerable<IFormFile> files, string fileParameterName, ILogger logger,
@@ -770,17 +779,19 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Biến thể của <see cref="PostAsFileAsync"/>: dùng <see cref="StreamContent"/> để stream trực tiếp từ
+        /// <c>file.OpenReadStream()</c> thay vì đọc hết vào <c>byte[]</c> (tiết kiệm bộ nhớ với file lớn), tự set
+        /// <c>ContentDisposition</c> (Name/FileName/FileNameStar) rõ ràng cho từng file, dùng HTTP/1.0.
         /// </summary>
-        /// <param name="option"></param>
-        /// <param name="files"></param>
-        /// <param name="fileParameterName"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (field form bổ sung), HttpClient.</param>
+        /// <param name="files">Danh sách file cần upload; file rỗng (Length == 0) sẽ bị bỏ qua.</param>
+        /// <param name="fileParameterName">Tên field form dùng cho phần nội dung file.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PostAsFileV2Async(
             HttpOptionModel<TRequest> option, IEnumerable<IFormFile> files, string fileParameterName, ILogger logger,
@@ -927,16 +938,18 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu POST với body JSON, cho phép truyền thêm header tùy chỉnh — được add vào
+        /// <c>client.DefaultRequestHeaders</c> (lưu ý: set trên client dùng chung, khác với
+        /// <see cref="GetAsJSonCustomHeaderAsync"/> add trực tiếp vào HttpRequestMessage.Headers).
         /// </summary>
-        /// <param name="option"></param>
-        /// <param name="headers"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (request body), HttpClient.</param>
+        /// <param name="headers">Danh sách header tùy chỉnh cần thêm vào client trước khi gửi.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PostWithHeadersAsJSonAsync(
             HttpOptionModel<TRequest> option, Dictionary<string, string> headers, ILogger logger,
@@ -1055,15 +1068,15 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: PUT ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu PUT với body JSON (serialize <c>option.Value</c> bằng <see cref="System.Text.Json.JsonSerializer"/>).
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (request body), HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PutAsJSonAsync(
             HttpOptionModel<TRequest> option, ILogger logger,
@@ -1174,15 +1187,16 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: DELETE ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu DELETE tới <c>option.Uri</c>, build query string từ TRequest (option.Value) qua
+        /// <see cref="ParseModelToQueryString"/> giống <see cref="GetAsJSonAsync"/> (DELETE không có body).
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (query params), HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         public static async Task<(TResponse, ErrorModel)> DeleteAsJSonAsync(
             HttpOptionModel<TRequest> option, ILogger logger,
             HttpVersionPolicy versionPolicy = HttpVersionPolicy.RequestVersionOrLower, int desiredTime = 3,
@@ -1291,15 +1305,15 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: PATCH ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu PATCH với body JSON (serialize <c>option.Value</c> bằng <see cref="System.Text.Json.JsonSerializer"/>).
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, Value (request body), HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PatchAsJSonAsync(
             HttpOptionModel<TRequest> option, ILogger logger,
@@ -1454,15 +1468,16 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: GET ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu GET tới <c>option.Uri</c> (không có TRequest nên không build query string), đính kèm Bearer
+        /// token nếu có, đo thời gian thực thi và ghi log tracing khi hoàn tất.
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> GetAsJSonAsync(
             HttpOptionModel option, ILogger logger,
@@ -1564,15 +1579,16 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Giống <see cref="GetAsJSonAsync(HttpOptionModel, ILogger, HttpVersionPolicy, int, int, CancellationToken)"/>
+        /// nhưng trả về thêm <see cref="HttpResponseHeaders"/> của response.
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response, ErrorModel, HttpResponseHeaders) — data/headers null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel, HttpResponseHeaders)> GetAsJSonAndHeaderAsync(
             HttpOptionModel option, ILogger logger,
@@ -1675,16 +1691,17 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu GET tới <c>option.Uri</c>, cho phép truyền thêm header tùy chỉnh — được add trực tiếp vào
+        /// <c>HttpRequestMessage.Headers</c> (không phải <c>DefaultRequestHeaders</c> của client dùng chung).
         /// </summary>
-        /// <param name="option"></param>
-        /// <param name="headers"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
+        /// <param name="headers">Danh sách header tùy chỉnh cần thêm vào request.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> GetAsJSonCustomHeaderAsync(
            HttpOptionModel option, IEnumerable<KeyValuePair<string, string>> headers, ILogger logger,
@@ -1796,15 +1813,16 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: POST ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu POST tới <c>option.Uri</c> <b>không có body</b> (không có TRequest nên không set Content) —
+        /// dùng cho endpoint dạng trigger/action không cần dữ liệu gửi kèm.
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PostAsJSonAsync(
             HttpOptionModel option, ILogger logger,
@@ -1906,16 +1924,18 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu POST với body là <see cref="MultipartFormDataContent"/> do caller tự xây dựng sẵn (không tự
+        /// build từ TRequest như <see cref="CallApiWithHttp{TRequest,TResponse}.PostAsFileAsync"/>). Nếu
+        /// <paramref name="form"/> null, trả về ngay (default) mà không gửi request.
         /// </summary>
-        /// <param name="option"></param>
-        /// <param name="form"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
+        /// <param name="form">Nội dung multipart/form-data đã được caller chuẩn bị sẵn.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi hoặc form null.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PostFormDataAsJSonAsync(
             HttpOptionModel option, MultipartFormDataContent form, ILogger logger,
@@ -2035,16 +2055,17 @@ namespace FTELSRCore.Utilizes
         }
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu POST tới <c>option.Uri</c> <b>không có body</b>, cho phép truyền thêm header tùy chỉnh —
+        /// được add vào <c>client.DefaultRequestHeaders</c>.
         /// </summary>
-        /// <param name="option"></param>
-        /// <param name="headers"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
+        /// <param name="headers">Danh sách header tùy chỉnh cần thêm vào client trước khi gửi.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PostWithHeadersAsJSonAsync(
             HttpOptionModel option, Dictionary<string, string> headers, ILogger logger,
@@ -2158,15 +2179,15 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: PUT ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu PUT tới <c>option.Uri</c> <b>không có body</b> (không có TRequest nên không set Content).
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PutAsJSonAsync(
             HttpOptionModel option, ILogger logger,
@@ -2272,15 +2293,15 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: DELETE ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu DELETE tới <c>option.Uri</c> (không có TRequest nên không build query string).
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> DeleteAsJSonAsync(
             HttpOptionModel option, ILogger logger,
@@ -2386,15 +2407,15 @@ namespace FTELSRCore.Utilizes
         #region :::::::::::::::::::::::::::::: PATCH ::::::::::::::::::::::::::::::
 
         /// <summary>
-        ///
+        /// Gửi yêu cầu PATCH tới <c>option.Uri</c> <b>không có body</b> (không có TRequest nên không set Content).
         /// </summary>
-        /// <param name="option"></param>
+        /// <param name="option">Thông tin cấu hình request: Uri, BaseAddress, Token, HttpClient.</param>
         /// <param name="logger"></param>
-        /// <param name="versionPolicy"></param>
-        /// <param name="desiredTime"></param>
-        /// <param name="cancellationTokenTime"></param>
+        /// <param name="versionPolicy">Chính sách thương lượng phiên bản HTTP.</param>
+        /// <param name="desiredTime">Ngưỡng thời gian (giây) để cảnh báo request chậm.</param>
+        /// <param name="cancellationTokenTime">Timeout (giây) cho toàn bộ request.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Tuple (dữ liệu response đã deserialize, ErrorModel) — data null nếu lỗi.</returns>
         ///
         public static async Task<(TResponse, ErrorModel)> PatchAsJSonAsync(
             HttpOptionModel option, ILogger logger,

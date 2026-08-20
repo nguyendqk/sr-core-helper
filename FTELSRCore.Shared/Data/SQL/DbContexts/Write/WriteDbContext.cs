@@ -7,15 +7,32 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FTELSRCore.Data.SQL.DbContexts.Write
 {
+    /// <summary>
+    /// DbContext dùng cho các thao tác ghi (Insert/Update/Delete) trên nguồn dữ liệu chính (write primary),
+    /// khác với <see cref="FTELSRCore.Data.SQL.DbContexts.Read.ReadDbContext{TContext}"/>. Tự động gán thông tin
+    /// audit (người tạo/sửa, thời gian) trước khi lưu và phát tán (dispatch) domain event sau khi lưu thành công.
+    /// </summary>
+    /// <typeparam name="TContext">Kiểu DbContext cụ thể của ứng dụng, dùng để nạp cấu hình entity tương ứng.</typeparam>
     public partial class WriteDbContext<TContext> : DbContext where TContext : DbContext
     {
         private readonly Lazy<IServiceScopeFactory> _serviceScopeFactory;
 
+        /// <summary>
+        /// Khởi tạo WriteDbContext với các tùy chọn kết nối được cấu hình sẵn và factory tạo scope DI
+        /// (dùng để resolve <see cref="IPublisher"/> khi dispatch domain event).
+        /// </summary>
+        /// <param name="options">Các tùy chọn cấu hình DbContext (connection string, provider, interceptor, v.v.).</param>
+        /// <param name="serviceScopeFactory">Factory tạo scope DI dùng khi phát tán domain event.</param>
+        ///
         public WriteDbContext(DbContextOptions<TContext> options, Lazy<IServiceScopeFactory> serviceScopeFactory) : base(options)
         {
             _serviceScopeFactory = serviceScopeFactory;
         }
 
+        /// <summary>
+        /// Nạp cấu hình entity (entity configurations) từ assembly chứa TContext để áp dụng cho mô hình dữ liệu.
+        /// </summary>
+        /// <param name="modelBuilder">Đối tượng dùng để xây dựng mô hình dữ liệu của DbContext.</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Load configurations từ assembly của TContext để hỗ trợ đa dạng các context.
@@ -25,6 +42,13 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
 
     public partial class WriteDbContext<TContext> where TContext : DbContext
     {
+        /// <summary>
+        /// Ghi đè SaveChanges đồng bộ: bổ sung thông tin audit trước khi lưu (không có tham số <see cref="AuditModel"/>
+        /// nên chỉ dùng giá trị mặc định), sau đó phát tán domain event nếu có bản ghi thay đổi.
+        /// </summary>
+        /// <param name="acceptAllChangesOnSuccess">true để chấp nhận toàn bộ thay đổi sau khi lưu thành công.</param>
+        /// <returns>Số bản ghi bị ảnh hưởng.</returns>
+        ///
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
             OnBeforeSaveChanges();
@@ -39,6 +63,15 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
             return result;
         }
 
+        /// <summary>
+        /// Lưu thay đổi bất đồng bộ có kèm thông tin audit: bổ sung dữ liệu audit trước khi lưu, thu thập
+        /// các thay đổi để audit (nếu <paramref name="audit"/> khác null) rồi phát tán domain event sau khi lưu thành công.
+        /// </summary>
+        /// <param name="audit">Thông tin người thực hiện/audit; null thì dùng giá trị mặc định (Anonymous).</param>
+        /// <param name="acceptAllChangesOnSuccess">true để chấp nhận toàn bộ thay đổi sau khi lưu thành công.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Số bản ghi bị ảnh hưởng.</returns>
+        ///
         public async Task<int> SaveChangesAsync(AuditModel audit = null, bool acceptAllChangesOnSuccess = true, CancellationToken cancellationToken = default)
         {
             OnBeforeSaveChanges(audit);
@@ -60,6 +93,14 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
             return result;
         }
 
+        /// <summary>
+        /// Ghi đè SaveChangesAsync mặc định của EF Core: bổ sung thông tin audit (giá trị mặc định) trước khi lưu,
+        /// sau đó phát tán domain event nếu có ít nhất một bản ghi thay đổi.
+        /// </summary>
+        /// <param name="acceptAllChangesOnSuccess">true để chấp nhận toàn bộ thay đổi sau khi lưu thành công.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Số bản ghi bị ảnh hưởng.</returns>
+        ///
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
             OnBeforeSaveChanges();
@@ -363,6 +404,15 @@ namespace FTELSRCore.Data.SQL.DbContexts.Write
             return base.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Thu thập domain event từ các <see cref="Aggregate"/> đang được ChangeTracker theo dõi (gộp với danh sách
+        /// truyền vào, loại trùng lặp), xóa ChangeTracker rồi publish tuần tự từng event qua <see cref="IPublisher"/>
+        /// được resolve từ một scope DI mới tạo.
+        /// </summary>
+        /// <param name="domainEvents">Danh sách domain event bổ sung cần publish cùng; mặc định rỗng.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        ///
         public async Task DispatchDomainEvents(List<IDomainEvent> domainEvents = null, CancellationToken cancellationToken = default)
         {
             domainEvents ??= [];

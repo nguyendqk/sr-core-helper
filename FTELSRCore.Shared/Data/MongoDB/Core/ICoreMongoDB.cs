@@ -1,6 +1,4 @@
-﻿// Ignore Spelling: Mongo
-
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Linq.Expressions;
 using static FTELSRCore.Extensions.ProjectToExtensions;
@@ -9,8 +7,28 @@ namespace FTELSRCore.Data.MongoDB.Core
 {
     public interface ICoreMongoDB<TTable> where TTable : class
     {
+        /// <summary>
+        /// Đếm số lượng tài liệu thỏa mãn <see cref="FilterDefinition{TTable}"/>. Nếu không truyền filter (null),
+        /// tự động quy về <c>Filter.Empty</c> để đếm toàn bộ collection.
+        /// </summary>
+        /// <param name="filter">Bộ lọc dạng FilterDefinition; null nghĩa là lấy tất cả.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>Tổng số tài liệu thỏa điều kiện.</returns>
          Task<long> CountAllAsync(
             FilterDefinition<TTable> filter = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Đếm bất đồng bộ số lượng tài liệu trong bộ sưu tập MongoDB dựa trên bộ lọc.
+        /// </summary>
+        /// <param name="filter">Bộ lọc dạng biểu thức để chọn các tài liệu cần đếm.</param>
+        /// <param name="cancellationToken">Token để hủy thao tác bất đồng bộ. Mặc định là default.</param>
+        /// <returns>Task trả về số lượng tài liệu (long) thỏa mãn bộ lọc.</returns>
+        /// <remarks>
+        /// Hàm thực thi với chính sách thử lại (_retryPolicy) và sử dụng MongoDB CountDocumentsAsync để đếm tài liệu.
+        /// </remarks>
+        ///
+        public Task<long> CountAllAsync(
+            Expression<Func<TTable, bool>> filter, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Đếm bất đồng bộ số lượng tài liệu trong bộ sưu tập MongoDB dựa trên bộ lọc và trạng thái xóa mềm.
@@ -26,19 +44,6 @@ namespace FTELSRCore.Data.MongoDB.Core
         ///
         public Task<long> CountAllSortDeletedAsync(
             Expression<Func<TTable, bool>> filter, bool isDeleted = false, CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Đếm bất đồng bộ số lượng tài liệu trong bộ sưu tập MongoDB dựa trên bộ lọc.
-        /// </summary>
-        /// <param name="filter">Bộ lọc dạng biểu thức để chọn các tài liệu cần đếm.</param>
-        /// <param name="cancellationToken">Token để hủy thao tác bất đồng bộ. Mặc định là default.</param>
-        /// <returns>Task trả về số lượng tài liệu (long) thỏa mãn bộ lọc.</returns>
-        /// <remarks>
-        /// Hàm thực thi với chính sách thử lại (_retryPolicy) và sử dụng MongoDB CountDocumentsAsync để đếm tài liệu.
-        /// </remarks>
-        ///
-        public Task<long> CountAllAsync(
-            Expression<Func<TTable, bool>> filter, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Tìm tất cả các bản ghi có phân trang và chuyển đổi chúng thành kiểu DTO.
@@ -156,24 +161,24 @@ namespace FTELSRCore.Data.MongoDB.Core
             Expression<Func<TTable, bool>> filter, CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///
+        /// Tìm tất cả bản ghi theo bộ lọc, kết hợp thêm điều kiện trạng thái xóa mềm (AND với <c>isDeleted</c>).
         /// </summary>
-        /// <param name="filter"></param>
-        /// <param name="isDeleted"></param>
+        /// <param name="filter">Biểu thức lọc bản ghi trong cơ sở dữ liệu.</param>
+        /// <param name="isDeleted">true: chỉ lấy bản ghi đã xóa mềm; false: chỉ lấy bản ghi chưa xóa mềm.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Danh sách bản ghi kiểu TTable thỏa điều kiện lọc và trạng thái xóa mềm.</returns>
         ///
         Task<List<TTable>> FindAllSortDeletedAsync(
             Expression<Func<TTable, bool>> filter, bool isDeleted = false, CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///
+        /// Tìm tất cả bản ghi theo bộ lọc, kết hợp thêm điều kiện trạng thái xóa mềm, và chuyển đổi sang kiểu DTO.
         /// </summary>
-        /// <typeparam name="TDto"></typeparam>
-        /// <param name="filter"></param>
-        /// <param name="isDeleted"></param>
+        /// <typeparam name="TDto">Kiểu DTO mà dữ liệu sẽ được chuyển đổi sang.</typeparam>
+        /// <param name="filter">Biểu thức lọc bản ghi trong cơ sở dữ liệu.</param>
+        /// <param name="isDeleted">true: chỉ lấy bản ghi đã xóa mềm; false: chỉ lấy bản ghi chưa xóa mềm.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Danh sách bản ghi kiểu TDto thỏa điều kiện lọc và trạng thái xóa mềm.</returns>
         ///
         Task<List<TDto>> FindAllSortDeletedAsync<TDto>(
             Expression<Func<TTable, bool>> filter, bool isDeleted = false, CancellationToken cancellationToken = default) where TDto : class;
@@ -249,7 +254,8 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <param name="entity">Đối tượng chứa thông tin cần cập nhật.</param>
         /// <param name="audit"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns>Trả về true nếu cập nhật thành công, false nếu có lỗi hoặc các tham số không hợp lệ.</returns>
+        /// <returns>Trả về true nếu cập nhật hoặc tạo mới (upsert) thành công, false nếu có lỗi hoặc tham số không hợp lệ.</returns>
+        /// <remarks>Bật upsert: nếu filter không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         Task<bool> IsUpdateOneAsync(
             Expression<Func<TTable, bool>> filter, TTable entity, AuditModel audit = null, CancellationToken cancellationToken = default);
@@ -261,7 +267,8 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <param name="updateDefinition">Định nghĩa cập nhật.</param>
         /// <param name="audit">Thông tin audit, nếu có.</param>
         /// <param name="cancellationToken">Token hủy bỏ.</param>
-        /// <returns>Trả về true nếu có bản ghi được cập nhật; ngược lại là false.</returns>
+        /// <returns>Trả về true nếu có bản ghi được cập nhật hoặc tạo mới (upsert); ngược lại là false.</returns>
+        /// <remarks>Bật upsert: nếu filter không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         Task<bool> IsUpdateOneAsync(
             Expression<Func<TTable, bool>> filter, UpdateDefinition<TTable> updateDefinition, AuditModel audit = null, CancellationToken cancellationToken = default);
@@ -274,28 +281,32 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <param name="entity">Dữ liệu cập nhật cho các bản ghi thỏa mãn bộ lọc.</param>
         /// <param name="audit"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns>Trả về <c>true</c> nếu việc cập nhật thành công, <c>false</c> nếu thất bại hoặc có lỗi xảy ra.</returns>
+        /// <returns>Trả về <c>true</c> nếu việc cập nhật hoặc tạo mới (upsert) thành công, <c>false</c> nếu thất bại hoặc có lỗi xảy ra.</returns>
+        /// <remarks>Bật upsert: nếu filter không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         Task<bool> IsUpdateManyAsync(
              Expression<Func<TTable, bool>> filter, TTable entity, AuditModel audit = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///
+        /// Cập nhật hàng loạt, mỗi phần tử có filter và entity riêng, gộp thành một lệnh BulkWrite (UpdateOneModel).
+        /// Bật upsert: nếu filter của một phần tử không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.
         /// </summary>
-        /// <param name="entities"></param>
+        /// <param name="entities">Danh sách cặp (filter, entity) — mỗi cặp là một bản ghi cần cập nhật.</param>
         /// <param name="audit"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Trả về true nếu có ít nhất một bản ghi được cập nhật hoặc tạo mới (upsert); ngược lại false.</returns>
         ///
         Task<bool> IsUpdateManyAsync(
             List<(Expression<Func<TTable, bool>> filter, TTable entity)> entities, AuditModel audit = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///
+        /// Cập nhật hàng loạt bằng <see cref="UpdateDefinition{TTable}"/> có sẵn cho từng phần tử, gộp thành một
+        /// lệnh BulkWrite (UpdateOneModel). Bật upsert: nếu filter của một phần tử không khớp bản ghi nào,
+        /// MongoDB sẽ tự tạo mới document.
         /// </summary>
-        /// <param name="entities"></param>
+        /// <param name="entities">Danh sách cặp (filter, updateDefinition) — mỗi cặp là một bản ghi cần cập nhật.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Trả về true nếu có ít nhất một bản ghi được cập nhật hoặc tạo mới (upsert); ngược lại false.</returns>
         ///
         Task<bool> IsUpdateManyAsync(
             List<(Expression<Func<TTable, bool>> filter, UpdateDefinition<TTable> entity)> entities, CancellationToken cancellationToken = default);
@@ -307,7 +318,8 @@ namespace FTELSRCore.Data.MongoDB.Core
         /// <param name="updateDefinition">Định nghĩa cập nhật.</param>
         /// <param name="audit">Thông tin audit, nếu có.</param>
         /// <param name="cancellationToken">Token hủy bỏ.</param>
-        /// <returns>Trả về true nếu có ít nhất một bản ghi được cập nhật; ngược lại là false.</returns>
+        /// <returns>Trả về true nếu có ít nhất một bản ghi được cập nhật hoặc tạo mới (upsert); ngược lại là false.</returns>
+        /// <remarks>Bật upsert: nếu filter không khớp bản ghi nào, MongoDB sẽ tự tạo mới document.</remarks>
         ///
         Task<bool> IsUpdateManyAsync(
             Expression<Func<TTable, bool>> filter, UpdateDefinition<TTable> updateDefinition, AuditModel audit = null, CancellationToken cancellationToken = default);
@@ -333,46 +345,50 @@ namespace FTELSRCore.Data.MongoDB.Core
             Expression<Func<TTable, bool>> filter, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Lấy thông tin tổng hợp từ cơ sở dữ liệu sử dụng pipeline.
+        /// Lấy thông tin tổng hợp từ cơ sở dữ liệu sử dụng aggregation pipeline (kiểu <see cref="PipelineDefinition{TTable,TResult}"/>),
+        /// duyệt cursor và lọc bỏ phần tử null.
         /// </summary>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="pipeline"></param>
-        /// <param name="options"></param>
+        /// <typeparam name="TResult">Kiểu kết quả trả về sau khi tổng hợp.</typeparam>
+        /// <param name="pipeline">Định nghĩa pipeline; null sẽ trả về danh sách rỗng.</param>
+        /// <param name="options">Tùy chọn Aggregate, mặc định BatchSize 500, MaxTime 30s nếu không truyền.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Danh sách kết quả kiểu TResult; danh sách rỗng nếu pipeline null hoặc không có dữ liệu.</returns>
         ///
         Task<List<TResult>> FindAllWithAggregateAsync<TResult>(
             PipelineDefinition<TTable, TResult> pipeline, AggregateOptions options = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Lấy thông tin tổng hợp từ cơ sở dữ liệu sử dụng pipeline.
+        /// Lấy thông tin tổng hợp từ cơ sở dữ liệu sử dụng aggregation pipeline dạng <see cref="BsonDocument"/>[],
+        /// kết quả ánh xạ về kiểu TTable.
         /// </summary>
-        /// <param name="pipeline"></param>
-        /// <param name="options"></param>
+        /// <param name="pipeline">Mảng các stage BsonDocument; null sẽ trả về danh sách rỗng.</param>
+        /// <param name="options">Tùy chọn Aggregate, mặc định BatchSize 500, MaxTime 30s nếu không truyền.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Danh sách kết quả kiểu TTable; danh sách rỗng nếu pipeline null hoặc không có dữ liệu.</returns>
         Task<List<TTable>> FindAllWithAggregateAsync(
             BsonDocument[] pipeline, AggregateOptions options = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Lấy thông tin tổng hợp từ cơ sở dữ liệu sử dụng pipeline.
+        /// Lấy thông tin tổng hợp từ cơ sở dữ liệu sử dụng aggregation pipeline dạng <see cref="BsonDocument"/>[],
+        /// kết quả ánh xạ về kiểu TResult tùy ý.
         /// </summary>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="pipeline"></param>
-        /// <param name="options"></param>
+        /// <typeparam name="TResult">Kiểu kết quả trả về sau khi tổng hợp.</typeparam>
+        /// <param name="pipeline">Mảng các stage BsonDocument; null sẽ trả về danh sách rỗng.</param>
+        /// <param name="options">Tùy chọn Aggregate, mặc định BatchSize 500, MaxTime 30s nếu không truyền.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Danh sách kết quả kiểu TResult; danh sách rỗng nếu pipeline null hoặc không có dữ liệu.</returns>
         ///
         Task<List<TResult>> FindAllWithAggregateAsync<TResult>(
             BsonDocument[] pipeline, AggregateOptions options = null, CancellationToken cancellationToken = default);
 
         /// <summary>
-        ///
+        /// Thực thi hàng loạt lệnh ghi tùy ý (Insert/Update/Delete/Replace) trong một lần gọi MongoDB BulkWrite,
+        /// caller tự xây dựng danh sách <see cref="WriteModel{TTable}"/> (bao gồm việc tự bật upsert nếu cần).
         /// </summary>
-        /// <param name="options"></param>
-        /// <param name="requests"></param>
+        /// <param name="requests">Danh sách các lệnh ghi (WriteModel) cần thực thi.</param>
+        /// <param name="options">Tùy chọn BulkWrite (thứ tự thực thi, v.v.), mặc định null.</param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <returns>Trả về true nếu server xác nhận (IsAcknowledged) và có bản ghi khớp hoặc được upsert; ngược lại false.</returns>
         ///
         Task<bool> BulkWriteAsync(
             IEnumerable<WriteModel<TTable>> requests, BulkWriteOptions options = null, CancellationToken cancellationToken = default);
