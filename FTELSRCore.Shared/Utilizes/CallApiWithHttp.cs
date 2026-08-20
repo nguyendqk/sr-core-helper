@@ -126,7 +126,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"URL\":{urlQueryString},\"Option\":{System.Text.Json.JsonSerializer.Serialize(result)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(option)}}}");
+                    message: string.Format(
+                                    "{{\"URL\":\"{0}\",\"Option\":{1},\"Result\":{2}}}",
+                                    urlQueryString, System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -239,7 +241,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"URL\":{urlQueryString},\"Option\":{System.Text.Json.JsonSerializer.Serialize(result)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(option)}}}");
+                    message: string.Format(
+                                    "{{\"URL\":\"{0}\",\"Option\":{1},\"Result\":{2}}}",
+                                    urlQueryString, System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -357,7 +361,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -481,7 +487,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -595,7 +603,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -753,7 +763,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -908,7 +920,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1030,7 +1044,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1147,7 +1163,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(result)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(option)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1262,7 +1280,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"URL\":{urlQueryString},\"Option\":{System.Text.Json.JsonSerializer.Serialize(result)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(option)}}}");
+                    message: string.Format(
+                                    "{{\"URL\":\"{0}\",\"Option\":{1},\"Result\":{2}}}",
+                                    urlQueryString, System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1379,7 +1399,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1535,7 +1557,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1644,7 +1668,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1759,7 +1785,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1871,7 +1899,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -1998,7 +2028,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -2115,7 +2147,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -2227,7 +2261,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -2339,7 +2375,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 
@@ -2451,7 +2489,9 @@ namespace FTELSRCore.Utilizes
                         false => DirectionType.Outbound,
                     },
                     responseTimeMs: (Stopwatch.GetTimestamp() - start) * 1000 / Stopwatch.Frequency,
-                    message: $"{{\"Option\":{System.Text.Json.JsonSerializer.Serialize(option)},\"Result\":{System.Text.Json.JsonSerializer.Serialize(result)}}}");
+                    message: string.Format(
+                                    "{{\"Option\":{0},\"Result\":{1}}}",
+                                    System.Text.Json.JsonSerializer.Serialize(option), JsonConvert.SerializeObject(result)));
             }
         }
 

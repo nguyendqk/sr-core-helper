@@ -1,8 +1,10 @@
+using Confluent.Kafka;
 using FTELSRCore.Extensions.Loggers.Helpers;
 using MongoDB.Bson;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using System.Text.Json;
 using static FTELSRCore.Infrastructure.Extensions.Helpers.SerilogProviderExtensions.Formatters.SRKafkaLogFormatter;
 
 namespace FTELSRCore.Extensions.Loggers
@@ -251,12 +253,30 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void Warning(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _warning(logger, className, methodName, message?.ToJSon(), e);
+            _warning(logger, className, methodName, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void Debug(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _debug(logger, className, methodName, message?.ToJSon(), e);
+            _debug(logger, className, methodName, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         #region +++++++++++++++++ REQUEST +++++++++++++++++
@@ -268,7 +288,16 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void Request(this ILogger logger, string className, string methodName, string requestName, object parameters, Exception e = null)
         {
-            _request(logger, className, methodName, requestName, parameters?.ToJSon(), e);
+            _request(logger, className, methodName, requestName, parameters switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(parameters)
+            }, e);
         }
 
         #endregion +++++++++++++++++ REQUEST +++++++++++++++++
@@ -282,12 +311,30 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void Response(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _response(logger, className, methodName, message?.ToJSon(), e);
+            _response(logger, className, methodName, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void Response(this ILogger logger, string className, string methodName, long latency, object message, Exception e = null)
         {
-            _responseWithTracing(logger, className, methodName, latency, LatencyRatingData(latency: latency), message?.ToJSon(), e);
+            _responseWithTracing(logger, className, methodName, latency, LatencyRatingData(latency: latency), message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         #endregion +++++++++++++++++ REPONSE +++++++++++++++++
@@ -296,12 +343,30 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void Info(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _info(logger, className, methodName, message?.ToJSon(), e);
+            _info(logger, className, methodName, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void FailLogic(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _failLogic(logger, className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message?.ToJSon(), e);
+            _failLogic(logger, className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void Info<T>(this ILogger logger, string className, string methodName, FilterDefinition<T> parameters, Exception e = null) where T : class
@@ -346,7 +411,16 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void HttpResult(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _httpResult(logger, className, methodName, message?.ToJSon(), e);
+            _httpResult(logger, className, methodName, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void HttpErrorResult(this ILogger logger, string className, string methodName, object message)
@@ -354,7 +428,16 @@ namespace FTELSRCore.Extensions.Loggers
             logger.Log(LogLevel.Error,
                 new EventId(EventIds.HttpErrorResult, nameof(HttpErrorResult)),
                 "------------HTTP------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- response HTTP error result: {Message}",
-                className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message?.ToJSon());
+                className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message switch
+                {
+                    null => string.Empty,
+
+                    int value => value,
+
+                    string value => value,
+
+                    _ => JsonSerializer.Serialize(message)
+                });
         }
 
         public static void HttpErrorResult(this ILogger logger, string className, string methodName, object message, Exception e)
@@ -362,7 +445,16 @@ namespace FTELSRCore.Extensions.Loggers
             logger.Log(LogLevel.Error,
                 new EventId(EventIds.HttpErrorResult, nameof(HttpErrorResult)),
                 "------------HTTP------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- response HTTP error result: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
-                className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message?.ToJSon(), e?.Message?.Trim(), e?.StackTrace?.Trim());
+                className, methodName, LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC, message switch
+                {
+                    null => string.Empty,
+
+                    int value => value,
+
+                    string value => value,
+
+                    _ => JsonSerializer.Serialize(message)
+                }, e?.Message?.Trim(), e?.StackTrace?.Trim());
         }
 
         public static void HttpResultWithTracing(
@@ -384,7 +476,16 @@ namespace FTELSRCore.Extensions.Loggers
                 "- [ErrorCategory: {ErrorCategory}] -- response HTTP result: {Message}",
                 className, methodName, httpMethod, uri, uriWithQuery, systemOwner, direction, statusCode,
                 responseTimeMs, LatencyRatingData(latency: responseTimeMs),
-                LoggerErrorCategoriesHelper.ApiCategory.ResolveCategory(statusCode: (int.TryParse(statusCode, out var statusCodeToInt) ? statusCodeToInt : 0)), message?.ToJSon());
+                LoggerErrorCategoriesHelper.ApiCategory.ResolveCategory(statusCode: (int.TryParse(statusCode, out var statusCodeToInt) ? statusCodeToInt : 0)), message switch
+                {
+                    null => string.Empty,
+
+                    int value => value,
+
+                    string value => value,
+
+                    _ => JsonSerializer.Serialize(message)
+                });
         }
 
         #endregion +++++++++++++++++ HTTP +++++++++++++++++
@@ -402,17 +503,44 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void KafkaErrorResult(this ILogger logger, string className, string methodName, string topic, object message, Exception e = null)
         {
-            _kafkaErrorResult(logger, className, methodName, topic, message?.ToJSon(), e);
+            _kafkaErrorResult(logger, className, methodName, topic, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void KafkaErrorWithoutTopic(this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _kafkaErrorWithoutTopic(logger, className, methodName, message?.ToJSon(), e);
+            _kafkaErrorWithoutTopic(logger, className, methodName, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void Kafka(this ILogger logger, string className, string methodName, string topic, object message, Exception e = null)
         {
-            _kafka(logger, className, methodName, topic, message?.ToJSon(), e);
+            _kafka(logger, className, methodName, topic, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void KafkaErrorException(this ILogger logger, string className, string methodName, Exception e, object message = null, string topic = "")
@@ -426,7 +554,16 @@ namespace FTELSRCore.Extensions.Loggers
                             new EventId(EventIds.KafkaErrorResult, nameof(KafkaErrorResult)),
                             "------------KAFKA------------ {ClassName} - {MethodName} - [Topic:{Topic} - ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                             className, methodName, topic,
-                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message?.ToJSon() ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message switch
+                            {
+                                null => string.Empty,
+
+                                int value => value,
+
+                                string value => value,
+
+                                _ => JsonSerializer.Serialize(message)
+                            }, e?.Message?.Trim(), e?.StackTrace?.Trim());
 
                         break;
                     }
@@ -437,7 +574,16 @@ namespace FTELSRCore.Extensions.Loggers
                             new EventId(EventIds.KafkaErrorResult, nameof(KafkaErrorResult)),
                             "------------KAFKA------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                             className, methodName,
-                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message?.ToJSon() ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message switch
+                            {
+                                null => string.Empty,
+
+                                int value => value,
+
+                                string value => value,
+
+                                _ => JsonSerializer.Serialize(message)
+                            }, e?.Message?.Trim(), e?.StackTrace?.Trim());
 
                         break;
                     }
@@ -450,12 +596,30 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void ErrorResult(this ILogger logger, string className, string methodName, object message, string errorCategory = "", Exception e = null)
         {
-            _errorResult(logger, className, methodName, (!string.IsNullOrWhiteSpace(errorCategory) ? errorCategory : LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC), message?.ToJSon(), e);
+            _errorResult(logger, className, methodName, (!string.IsNullOrWhiteSpace(errorCategory) ? errorCategory : LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC), message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void Error(this ILogger logger, string className, string methodName, object message, string errorCategory = "", Exception e = null)
         {
-            _error(logger, className, methodName, (!string.IsNullOrWhiteSpace(errorCategory) ? errorCategory : LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC), message?.ToJSon(), e);
+            _error(logger, className, methodName, (!string.IsNullOrWhiteSpace(errorCategory) ? errorCategory : LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC), message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void ErrorException(this ILogger logger, string className, string methodName, Exception e, string errorCategory = "", object message = null)
@@ -465,7 +629,16 @@ namespace FTELSRCore.Extensions.Loggers
                 new EventId(EventIds.ErrorException, nameof(ErrorException)),
                 "{ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                 className, methodName, (!string.IsNullOrWhiteSpace(errorCategory) ? errorCategory : LoggerErrorCategoriesHelper.BusinessCategory.BIZ_LOGIC),
-                message?.ToJSon(), e?.Message?.Trim(), e?.StackTrace?.Trim());
+                message switch
+                {
+                    null => string.Empty,
+
+                    int value => value,
+
+                    string value => value,
+
+                    _ => JsonSerializer.Serialize(message)
+                }, e?.Message?.Trim(), e?.StackTrace?.Trim());
         }
 
         #endregion +++++++++++++++++ ERORR +++++++++++++++++
@@ -475,24 +648,60 @@ namespace FTELSRCore.Extensions.Loggers
         public static void Connection(
             this ILogger logger, string className, string methodName, object message, Exception e = null)
         {
-            _connection(logger, className, methodName, message?.ToJSon(), e);
+            _connection(logger, className, methodName, message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            }, e);
         }
 
         public static void ConnectionErrorSQL(
             this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
-            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_SQLSERVER, e: e, message: message?.ToJSon());
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_SQLSERVER, e: e, message: message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            });
         }
 
         public static void ConnectionErrorMongoDB(
             this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
-            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_MONGODB, e: e, message: message?.ToJSon());
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_MONGODB, e: e, message: message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            });
         }
 
         public static void ConnectionErrorRedis(this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
-            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_REDIS, e: e, message: message?.ToJSon());
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_REDIS, e: e, message: message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            });
         }
 
         public static void ConnectionErrorKafka(this ILogger logger, string className, string methodName, Exception e, object message = null, string topic = "")
@@ -506,7 +715,16 @@ namespace FTELSRCore.Extensions.Loggers
                             new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
                             "------------CONNECTION------------ {ClassName} - {MethodName} - [Topic:{Topic} - ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                             className, methodName, topic,
-                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message?.ToJSon() ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message switch
+                            {
+                                null => string.Empty,
+
+                                int value => value,
+
+                                string value => value,
+
+                                _ => JsonSerializer.Serialize(message)
+                            }, e?.Message?.Trim(), e?.StackTrace?.Trim());
 
                         break;
                     }
@@ -517,7 +735,16 @@ namespace FTELSRCore.Extensions.Loggers
                             new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
                             "------------CONNECTION------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                             className, methodName,
-                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message?.ToJSon() ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
+                            LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_KAFKA, message switch
+                            {
+                                null => string.Empty,
+
+                                int value => value,
+
+                                string value => value,
+
+                                _ => JsonSerializer.Serialize(message)
+                            }, e?.Message?.Trim(), e?.StackTrace?.Trim());
 
                         break;
                     }
@@ -526,12 +753,30 @@ namespace FTELSRCore.Extensions.Loggers
 
         public static void ConnectionErrorElasticSearch(this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
-            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_ELASTICSEARCH, e: e, message: message?.ToJSon());
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.DB_ELASTICSEARCH, e: e, message: message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            });
         }
 
         public static void ConnectionErrorRabbitMQ(this ILogger logger, string className, string methodName, Exception e, object message = null)
         {
-            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_RABBITMQ, e: e, message: message?.ToJSon());
+            ConnectionError(logger, className, methodName, LoggerErrorCategoriesHelper.InfrastructureCategory.MQ_RABBITMQ, e: e, message: message switch
+            {
+                null => string.Empty,
+
+                int value => value,
+
+                string value => value,
+
+                _ => JsonSerializer.Serialize(message)
+            });
         }
 
         private static void ConnectionError(this ILogger logger, string className, string methodName, string errorCategory, Exception e, object message)
@@ -541,7 +786,16 @@ namespace FTELSRCore.Extensions.Loggers
                 new EventId(EventIds.ConnectionError, nameof(ConnectionError)),
                 "------------CONNECTION------------ {ClassName} - {MethodName} - [ErrorCategory:{ErrorCategory}] -- error exception message: {Message}\n-- {ErrorMessage}\n-- {StackTrace}",
                 className, methodName, errorCategory,
-                message?.ToJSon() ?? string.Empty, e?.Message?.Trim(), e?.StackTrace?.Trim());
+                message switch
+                {
+                    null => string.Empty,
+
+                    int value => value,
+
+                    string value => value,
+
+                    _ => JsonSerializer.Serialize(message)
+                }, e?.Message?.Trim(), e?.StackTrace?.Trim());
         }
 
         #endregion +++++++++++++++++ CONNECTION +++++++++++++++++
