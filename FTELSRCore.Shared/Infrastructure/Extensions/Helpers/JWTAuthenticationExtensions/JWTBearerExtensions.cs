@@ -71,20 +71,14 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                 context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                                CatalogsErrorCodeModel wrapperByCode =
-                                    ResponseWrapperByCodeMapper.FromStatusCode(
-                                        statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
-
                                 Result result = Result.FailSystem(
                                     statusCode: (int)HttpStatusCode.Unauthorized,
                                     message: "Thông tin Token được cấp đã hết hạn",
                                     serviceName: model.ServiceName ?? CommonBaseConstant.System,
                                     metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
-                                    error: new ResultFTelCoreErrorModel
-                                    {
-                                        Code = wrapperByCode.Code,
-                                        Retryable = wrapperByCode.Retryable
-                                    });
+                                    error:
+                                        ResponseWrapperByCodeMapper.FromStatusCode(
+                                            statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication));
 
                                 return context.Response.WriteAsJsonAsync(result);
                             }
@@ -99,20 +93,14 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                 context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                                CatalogsErrorCodeModel wrapperByCode =
-                                    ResponseWrapperByCodeMapper.FromStatusCode(
-                                        statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
-
                                 Result result = Result.FailSystem(
                                     statusCode: (int)HttpStatusCode.Unauthorized,
                                     message: "Xử lý đăng nhập để cấp quyền không thành công",
                                     serviceName: model.ServiceName ?? CommonBaseConstant.System,
                                     metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
-                                    error: new ResultFTelCoreErrorModel
-                                    {
-                                        Code = wrapperByCode.Code,
-                                        Retryable = wrapperByCode.Retryable
-                                    });
+                                    error: 
+                                        ResponseWrapperByCodeMapper.FromStatusCode(
+                                            statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication));
 
                                 switch (EnvironmentExtensions.GetEnvironment())
                                 {
@@ -143,20 +131,14 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                                 context.Response.ContentType = MediaTypeNames.Application.Json;
                                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-                                CatalogsErrorCodeModel wrapperByCode =
-                                    ResponseWrapperByCodeMapper.FromStatusCode(
-                                        statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication);
-
                                 Result result = Result.FailSystem(
                                     message: "Yêu cầu chưa được cấp quyền",
                                     statusCode: (int)HttpStatusCode.Unauthorized,
                                     serviceName: model.ServiceName ?? CommonBaseConstant.System,
                                     metadata: BuildMetaHelper.Build(httpContext: context?.HttpContext),
-                                    error: new ResultFTelCoreErrorModel
-                                    {
-                                        Code = wrapperByCode.Code,
-                                        Retryable = wrapperByCode.Retryable
-                                    });
+                                    error: 
+                                        ResponseWrapperByCodeMapper.FromStatusCode(
+                                            statusCode: HttpStatusCode.Unauthorized, sourceType: ErrorSourceType.Authentication));
 
                                 return context.Response.WriteAsJsonAsync(result);
                             }
@@ -172,20 +154,14 @@ namespace FTELSRCore.Infrastructure.Extensions.Helpers.JWTAuthenticationExtensio
                             context.Response.ContentType = MediaTypeNames.Application.Json;
                             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
 
-                            CatalogsErrorCodeModel wrapperByCode =
-                                ResponseWrapperByCodeMapper.FromStatusCode(
-                                    statusCode: HttpStatusCode.Forbidden, sourceType: ErrorSourceType.Authentication);
-
                             Result result = Result.FailSystem(
                                 statusCode: (int)HttpStatusCode.Forbidden,
                                 message: "Yêu cầu không được phép truy cập tài nguyên này",
                                 serviceName: model.ServiceName ?? CommonBaseConstant.System,
                                 metadata: BuildMetaHelper.Build(httpContext: context.HttpContext),
-                                error: new ResultFTelCoreErrorModel
-                                {
-                                    Code = wrapperByCode.Code,
-                                    Retryable = wrapperByCode.Retryable
-                                });
+                                error: 
+                                    ResponseWrapperByCodeMapper.FromStatusCode(
+                                        statusCode: HttpStatusCode.Forbidden, sourceType: ErrorSourceType.Authentication));
 
                             return context.Response.WriteAsJsonAsync(result);
                         }

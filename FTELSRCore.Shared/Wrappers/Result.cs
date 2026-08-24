@@ -35,26 +35,13 @@ namespace FTELSRCore.Wrappers
         {
         }
 
-        private static readonly CatalogsErrorCodeModel _catalogsBadRequest =
+        private static readonly ResultFTelCoreErrorModel _failLogicDefault =
             ResponseWrapperByCodeMapper.FromStatusCode(
                 statusCode: HttpStatusCode.BadRequest, sourceType: ErrorSourceType.General);
 
-        private static readonly ResultFTelCoreErrorModel _failLogicDefault =
-            new()
-            {
-                Code = _catalogsBadRequest.Code,
-                Retryable = _catalogsBadRequest.Retryable
-            };
-
-        private static readonly CatalogsErrorCodeModel _catalogsInternalServerError =
+        private static readonly ResultFTelCoreErrorModel _errorSystemDefault = 
             ResponseWrapperByCodeMapper.FromStatusCode(
                 statusCode: HttpStatusCode.InternalServerError, sourceType: ErrorSourceType.General);
-
-        private static readonly ResultFTelCoreErrorModel _errorSystemDefault = new()
-        {
-            Retryable = _catalogsInternalServerError.Retryable,
-            Code = _catalogsInternalServerError.Code
-        };
 
         #region ::::::::::::: FAIL :::::::::::::
 
@@ -183,16 +170,9 @@ namespace FTELSRCore.Wrappers
         {
         }
 
-        private static readonly CatalogsErrorCodeModel _catalogsBadRequest =
+        private static readonly ResultFTelCoreErrorModel _failLogicDefault = 
             ResponseWrapperByCodeMapper.FromStatusCode(
                 statusCode: HttpStatusCode.BadRequest, sourceType: ErrorSourceType.General);
-
-        private static readonly ResultFTelCoreErrorModel _failLogicDefault =
-            new()
-            {
-                Code = _catalogsBadRequest.Code,
-                Retryable = _catalogsBadRequest.Retryable
-            };
 
         #region ::::::::::::: FAIL :::::::::::::
 

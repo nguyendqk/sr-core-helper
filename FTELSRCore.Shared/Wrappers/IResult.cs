@@ -69,7 +69,7 @@ namespace FTELSRCore.Wrappers
         public ResultFTelCoreErrorModel Error { get; set; }
     }
 
-    public sealed record ResultFTelCoreErrorModel
+    public partial record ResultFTelCoreErrorModel
     {
         /// <summary>
         /// Mã lỗi nội bộ dạng string (ví dụ: SR_500, INVALID_OTP).
@@ -84,6 +84,38 @@ namespace FTELSRCore.Wrappers
         ///
         [JsonPropertyName("retryable")]
         public bool Retryable { get; set; } = false;
+
+        /// <summary>
+        /// Mô tả lỗi dễ hiểu, dành cho dev hoặc người dùng
+        /// </summary>
+        ///
+        [JsonPropertyName("message")]
+        public string Message { get; set; }
+
+        /// <summary>
+        /// Chi tiết lỗi
+        /// </summary>
+        ///
+        [JsonPropertyName("details")]
+        public List<DetailsFTelCoreErrorModel> Details { get; set; }
+    }
+
+    public record DetailsFTelCoreErrorModel
+    {
+        /// <summary>
+        /// Tên field bị lỗi (dùng cho lỗi validate dữ liệu đầu vào).
+        /// Để null nếu lỗi không gắn với field cụ thể (vd lỗi hệ thống, lỗi kết nối database).
+        /// </summary>
+        ///
+        [JsonPropertyName("field")]
+        public string Field { get; set; }
+
+        /// <summary>
+        /// Mô tả nguyên nhân/chi tiết kỹ thuật của lỗi.
+        /// </summary>
+        ///
+        [JsonPropertyName("reason")]
+        public List<string> Reason { get; set; }
     }
 
     public sealed record ResultFTelCoreMetadataModel

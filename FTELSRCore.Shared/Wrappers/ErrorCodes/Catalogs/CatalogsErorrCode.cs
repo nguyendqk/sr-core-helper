@@ -1,4 +1,5 @@
 ﻿using FTELSRCore.Wrappers.ErrorCodes.Catalogs.Systems;
+using System.Net;
 
 namespace FTELSRCore.Wrappers.ErrorCodes.Catalogs
 {
@@ -6,13 +7,14 @@ namespace FTELSRCore.Wrappers.ErrorCodes.Catalogs
     {
         public static readonly IReadOnlyDictionary<
             (int StatusCode, ErrorSourceType Source),
-            CatalogsErrorCodeModel> StatusMap =
-                new Dictionary<
-                    (int, ErrorSourceType),
-                    CatalogsErrorCodeModel>
+            ResultFTelCoreErrorModel> StatusMap =
+                new Dictionary<(int, ErrorSourceType), ResultFTelCoreErrorModel>
                 {
                     [(400, ErrorSourceType.General)] =
                         CatalogsErrorCodes.BadRequest,
+
+                    [(422, ErrorSourceType.General)] =
+                        CatalogsErrorCodes.UnprocessableEntity,
 
                     [(401, ErrorSourceType.Authentication)] =
                         CatalogsErrorCodes.Unauthorized,
@@ -42,16 +44,12 @@ namespace FTELSRCore.Wrappers.ErrorCodes.Catalogs
                         CatalogsErrorCodes.DatabaseUnavailable,
 
                     [(504, ErrorSourceType.ExternalService)] =
-                        CatalogsErrorCodes.ExternalTimeout
+                        CatalogsErrorCodes.ExternalTimeout,
+
+                    [((int)HttpStatusCode.NotFound, ErrorSourceType.General)] =
+                        CatalogsErrorCodes.NotFound
                 };
     }
-
-    public sealed record CatalogsErrorCodeModel(
-        string Code,
-        string Message,
-        string Description = null,
-        bool Retryable = false
-    );
 
     public enum ErrorSourceType
     {
