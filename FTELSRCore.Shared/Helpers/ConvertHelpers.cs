@@ -3,6 +3,7 @@ using Microsoft.Extensions.Primitives;
 using System.ComponentModel;
 using System.Globalization;
 using System.Net;
+using System.Net.Mail;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
@@ -43,11 +44,33 @@ namespace FTELSRCore.Helpers
         }
 
         /// <summary>
+        /// Determines whether the specified string is a valid email address.
+        /// </summary>
+        public static bool IsEmail(this string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            try
+            {
+                var email = new MailAddress(value);
+
+                return email.Address.Equals(
+                    value.Trim(),
+                    StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Lấy danh sách IP của người dùng
         /// </summary>
         /// <param name="httpContext"></param>
         /// <returns></returns>
-        /// 
+        ///
         public static string GetClientIpAddress(HttpContext httpContext)
         {
             try
